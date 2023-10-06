@@ -1,0 +1,23 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.sshtools</groupId>
+		<artifactId>java-nio-commons</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>sftp-niofs</artifactId>
+	<name>Java NIO File System Implemnentation</name>
+	<description>Access remote files over SFTP using the standard Java NIO API, i.e. Path and Files classes.</description>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.sshtools</groupId>
+			<artifactId>maverick-synergy-client</artifactId>
+			<version>3.1.0-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+	
+</project>
