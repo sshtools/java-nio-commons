@@ -254,7 +254,9 @@
 	</dependencies>
 
 	<modules>
+		<module>jadaptive-niofs-base</module>
 		<module>sftp-niofs</module>
 		<module>sftp-niofs-tests</module>
+		<module>box-niofs</module>
 	</modules>
 </project>
