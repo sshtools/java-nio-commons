@@ -159,7 +159,7 @@
 				<artifactId>license-maven-plugin</artifactId>
 				<version>2.3</version>
 				<configuration>
-					<header>templates/LGPL3.txt</header>
+					<header>templates/Apache2.0.txt</header>
 					<properties>
 						<owner>JADAPTIVE Limited</owner>
 						<email>support@jadaptive.com</email>
