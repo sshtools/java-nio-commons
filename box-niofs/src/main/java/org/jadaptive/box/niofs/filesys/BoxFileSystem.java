@@ -1,38 +1,40 @@
 package org.jadaptive.box.niofs.filesys;
 
+import org.jadaptive.box.niofs.api.BoxRemoteAPI;
+import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
+import org.jadaptive.box.niofs.path.BoxPathService;
+import org.jadaptive.niofs.filesys.BaseFileSystem;
+
 import java.io.IOException;
 import java.nio.file.FileStore;
-import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.UserPrincipalLookupService;
-import java.nio.file.spi.FileSystemProvider;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
-import org.jadaptive.box.niofs.auth.api.client.BoxAPIClient;
-import org.jadaptive.box.niofs.path.BoxPath;
+import static java.util.Objects.requireNonNull;
 
-import static java.util.Objects.*;
-
-public class BoxFileSystem extends FileSystem {
+public class BoxFileSystem extends BaseFileSystem {
 	
 	private static final String SEPARATOR = "/";
-	
 	private final BoxFileSystemProvider boxFileSystemProvider;
-	private final BoxAPIClient boxAPIClient;
+	private final BoxRemoteAPI boxRemoteAPI;
+
 	
-	public BoxFileSystem(BoxFileSystemProvider boxFileSystemProvider, BoxAPIClient boxAPIClient) {
+	public BoxFileSystem(BoxFileSystemProvider boxFileSystemProvider, BoxPathService boxPathService,
+						 BoxRemoteAPI boxRemoteAPI) {
+		super(boxPathService);
 		this.boxFileSystemProvider = boxFileSystemProvider;
-		this.boxAPIClient = boxAPIClient;
+		this.boxRemoteAPI = boxRemoteAPI;
 	}
 
 	@Override
-	public FileSystemProvider provider() {
+	public BoxFileSystemProvider provider() {
 		return this.boxFileSystemProvider;
 	}
 
@@ -58,7 +60,7 @@ public class BoxFileSystem extends FileSystem {
 
 	@Override
 	public Iterable<Path> getRootDirectories() {
-		return Set.of(new BoxPath(this, null, List.of("/")));
+		return Set.of(getPathService().createRoot());
 	}
 
 	@Override
@@ -75,8 +77,7 @@ public class BoxFileSystem extends FileSystem {
 
 	@Override
 	public Path getPath(String first, String... more) {
-		// TODO Auto-generated method stub
-		return null;
+		return getPathService().getPath(first, more);
 	}
 
 	@Override
@@ -101,9 +102,22 @@ public class BoxFileSystem extends FileSystem {
 		requireNonNull(path, "Path cannot be null");
 		// if we don't remove first separator split will return first value as empty string ""
 		// /get_started.pdf => "", "get_started.pdf"
-		if (path.startsWith(SEPARATOR)) {
+		if (path.startsWith(getPathService().getRootName())) {
 			path = path.substring(1);
 		}
+
+		// a blank path value when split on separator would end up in collection as the only value
+		// which is not desired, we need to return empty collection
+		// special case for "/", above starts with check will convert "/" => "" i,e, an empty string
+		if (path.isBlank()) {
+			return Collections.emptyList();
+		}
+
 		return Arrays.stream(path.split(SEPARATOR)).collect(Collectors.toList());
 	}
- }
+
+	@Override
+	public BoxPathService getPathService() {
+		return (BoxPathService) this.basePathService;
+	}
+}
