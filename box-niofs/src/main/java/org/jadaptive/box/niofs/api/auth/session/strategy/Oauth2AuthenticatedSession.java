@@ -1,7 +1,7 @@
-package org.jadaptive.box.niofs.auth.api.session.strategy;
+package org.jadaptive.box.niofs.api.auth.session.strategy;
 
 import com.box.sdk.BoxAPIConnection;
-import org.jadaptive.box.niofs.auth.api.session.AbstractAuthenticatedSession;
+import org.jadaptive.box.niofs.api.auth.session.AbstractAuthenticatedSession;
 
 public class Oauth2AuthenticatedSession extends AbstractAuthenticatedSession {
 

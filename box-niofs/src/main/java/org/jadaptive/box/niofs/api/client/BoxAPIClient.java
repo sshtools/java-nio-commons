@@ -1,12 +1,12 @@
-package org.jadaptive.box.niofs.auth.api.client;
+package org.jadaptive.box.niofs.api.client;
+
+import com.box.sdk.BoxAPIConnection;
+import org.jadaptive.box.niofs.api.auth.session.AuthenticatedSessionFactory;
+import org.jadaptive.box.niofs.api.auth.session.type.AuthenticatedSessionType;
 
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import com.box.sdk.BoxAPIConnection;
-import org.jadaptive.box.niofs.auth.api.session.AuthenticatedSessionFactory;
-import org.jadaptive.box.niofs.auth.api.session.type.AuthenticatedSessionType;
 
 public class BoxAPIClient {
 	

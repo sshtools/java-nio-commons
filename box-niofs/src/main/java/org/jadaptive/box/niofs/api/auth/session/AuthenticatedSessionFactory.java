@@ -1,13 +1,12 @@
-package org.jadaptive.box.niofs.auth.api.session;
+package org.jadaptive.box.niofs.api.auth.session;
 
-import org.jadaptive.box.niofs.auth.api.session.strategy.DeveloperTokenAuthenticatedSession;
-import org.jadaptive.box.niofs.auth.api.session.type.AuthenticatedSessionType;
+import org.jadaptive.box.niofs.api.auth.session.strategy.DeveloperTokenAuthenticatedSession;
+import org.jadaptive.box.niofs.api.auth.session.type.AuthenticatedSessionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
 public class AuthenticatedSessionFactory {

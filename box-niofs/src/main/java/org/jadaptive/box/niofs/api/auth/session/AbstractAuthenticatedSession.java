@@ -1,4 +1,4 @@
-package org.jadaptive.box.niofs.auth.api.session;
+package org.jadaptive.box.niofs.api.auth.session;
 
 import com.box.sdk.BoxAPIConnection;
 import com.box.sdk.BoxUser;

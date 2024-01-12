@@ -1,4 +1,4 @@
-package org.jadaptive.box.niofs.auth.api.session.type;
+package org.jadaptive.box.niofs.api.auth.session.type;
 
 public enum AuthenticatedSessionType {
 	TOKEN,

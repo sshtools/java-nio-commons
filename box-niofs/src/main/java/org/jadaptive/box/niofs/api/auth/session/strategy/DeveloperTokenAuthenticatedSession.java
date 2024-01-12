@@ -1,7 +1,7 @@
-package org.jadaptive.box.niofs.auth.api.session.strategy;
+package org.jadaptive.box.niofs.api.auth.session.strategy;
 
 import com.box.sdk.BoxAPIConnection;
-import org.jadaptive.box.niofs.auth.api.session.AbstractAuthenticatedSession;
+import org.jadaptive.box.niofs.api.auth.session.AbstractAuthenticatedSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
