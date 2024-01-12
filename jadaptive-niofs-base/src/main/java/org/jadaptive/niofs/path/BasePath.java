@@ -14,6 +14,9 @@ public abstract class BasePath implements Path {
 
     protected final List<String> names;
     protected final String root;
+    protected final BasePathService basePathService;
+
+    protected abstract boolean isSameInstance(Object path);
 
     /**
      * Constructs a BasePath.
@@ -42,20 +45,17 @@ public abstract class BasePath implements Path {
      * @param names that make up the complete path
      *
      */
-    protected BasePath(String root, List<String> names) {
+    protected BasePath(BasePathService basePathService, String root, List<String> names) {
+        requireNonNull(basePathService, "Path service cannot be null.");
         requireNonNull(names, "Path names list cannot be null.");
+        this.basePathService = basePathService;
         this.root = root;
         this.names = names;
     }
 
-    protected abstract String getRootName();
-    protected abstract BasePath createRoot();
-    protected abstract BasePath createPathFromIndex(int beginIndex, int endIndex);
-    protected abstract BasePath createPath(String root, List<String> names);
-    protected BasePath createEmptyPath() {
-        return createPath(null, List.of(""));
+    protected BasePathService getBasePathService() {
+        return this.basePathService;
     }
-    protected abstract boolean isSameInstance(Object path);
 
     protected boolean isNormal() {
         int count = getNameCount();
@@ -99,7 +99,7 @@ public abstract class BasePath implements Path {
             return null;
         }
 
-        return createRoot();
+        return getBasePathService().createRoot();
     }
 
     @Override
@@ -120,7 +120,7 @@ public abstract class BasePath implements Path {
             return null;
         }
 
-        return createPath(root, names.subList(0, names.size() - 1));
+        return getBasePathService().createPath(root, names.subList(0, names.size() - 1));
 
     }
 
@@ -134,12 +134,12 @@ public abstract class BasePath implements Path {
         if (index < 0 || index > names.size()) {
             throw new IllegalArgumentException("Index is out of bounds.");
         }
-        return createPath(null, Collections.singletonList(names.get(index)));
+        return getBasePathService().createPath(null, Collections.singletonList(names.get(index)));
     }
 
     @Override
     public BasePath subpath(int beginIndex, int endIndex) {
-        return createPathFromIndex(beginIndex, endIndex);
+        return getBasePathService().createPathFromIndex(beginIndex, endIndex, this.names);
     }
 
     @Override
@@ -189,7 +189,7 @@ public abstract class BasePath implements Path {
         if (isAbsolute()) {
             return this;
         }
-        return createPath(getRootName(), this.names);
+        return getBasePathService().createPath(getBasePathService().getRootName(), this.names);
     }
 
     @Override
@@ -210,7 +210,7 @@ public abstract class BasePath implements Path {
         var copyNames = getNames();
         copyNames.addAll(otherNames);
 
-        return createPath(root, copyNames);
+        return getBasePathService().createPath(root, copyNames);
     }
 
     /**
@@ -249,7 +249,7 @@ public abstract class BasePath implements Path {
         }
 
         if (other.equals(this)) {
-            return createEmptyPath();
+            return getBasePathService().createEmptyPath();
         }
 
         if (isEmptyPath()) {
@@ -276,7 +276,7 @@ public abstract class BasePath implements Path {
         // add each extra name in the other path
         parts.addAll(extraNamesInOther);
 
-        return createPath(null, parts);
+        return getBasePathService().createPath(null, parts);
     }
 
     @Override
@@ -300,7 +300,7 @@ public abstract class BasePath implements Path {
             }
         }
 
-        return createPath(root, new ArrayList<>(newNames));
+        return getBasePathService().createPath(root, new ArrayList<>(newNames));
     }
 
     @Override
@@ -325,7 +325,7 @@ public abstract class BasePath implements Path {
 
     @Override
     public String toString() {
-        var rootName = getRootName();
+        var rootName = getBasePathService().getRootName();
         // if is root return '/' unix style
         if (root != null && names.isEmpty()) {
             return rootName;
