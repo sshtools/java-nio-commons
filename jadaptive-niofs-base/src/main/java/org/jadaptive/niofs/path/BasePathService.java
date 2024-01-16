@@ -36,4 +36,6 @@ public abstract class BasePathService {
     }
     public abstract BasePath getPath(String first, String... more);
     public abstract BasePath getPath(URI uri);
+    public abstract BasePath getWorkingDirectory();
+
 }

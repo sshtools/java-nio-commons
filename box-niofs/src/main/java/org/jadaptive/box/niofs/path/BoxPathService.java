@@ -16,15 +16,14 @@
 package org.jadaptive.box.niofs.path;
 
 import org.jadaptive.box.niofs.filesys.BoxFileSystem;
+import org.jadaptive.niofs.path.BasePath;
 import org.jadaptive.niofs.path.BasePathService;
 
 import java.net.URI;
 import java.nio.file.FileSystem;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -33,7 +32,10 @@ public class BoxPathService extends BasePathService {
 
     private static final String ROOT_NAME = "/";
 
+    private final BoxPath workingDirectory;
+
     public BoxPathService() {
+        this.workingDirectory = createRoot();
     }
 
     @Override
@@ -111,6 +113,11 @@ public class BoxPathService extends BasePathService {
         var names = getFileSystem().getNamesForPath(path);
 
         return getPath(getRootName(), names.toArray(new String[0]));
+    }
+
+    @Override
+    public BasePath getWorkingDirectory() {
+        return this.workingDirectory;
     }
 
     @Override
