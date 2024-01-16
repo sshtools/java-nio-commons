@@ -29,7 +29,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("Path throws IllegalArgumentException when getName is called with a negative index value.")
     public void testPathNegativeIndex() {
         test(fs -> {
-            var path = fs.getPath("/some/sub/folder/file");
+            var path = fs.getPath(joinToPathWithRoot( "some", "sub", "folder", "file"));
             assertThrowsExactly(IllegalArgumentException.class, () -> path.getName(-1));
         });
     }
@@ -38,7 +38,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("Path throws IllegalArgumentException when getName is called with out of bounds index value.")
     public void testPathOverflowIndex() {
         test(fs -> {
-            var path = fs.getPath("/some/sub/folder/file");
+            var path = fs.getPath(joinToPathWithRoot( "some", "sub", "folder", "file"));
             assertThrowsExactly(IllegalArgumentException.class, () -> path.getName(9999));
         });
     }
@@ -47,7 +47,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("Parent for root of the filesystem should return null.")
     public void testRootParentIsNull() {
         test(fs -> {
-            var path = fs.getPath("/");
+            var path = fs.getPath(joinToPathWithRoot());
             assertNull(path.getParent());
         });
     }
@@ -55,7 +55,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("Filename call for root path should return null.")
     public void testRootFilenameIsNull() {
         test(fs -> {
-            var path = fs.getPath("/");
+            var path = fs.getPath(joinToPathWithRoot());
             assertNull(path.getFileName());
         });
     }
@@ -64,7 +64,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("Root for a relative path should return null.")
     public void testRelativeRootIsNull() {
         test(fs -> {
-            var path = fs.getPath("def");
+            var path = fs.getPath(joinToPath( "def"));
             assertNull(path.getRoot());
         });
     }
@@ -73,11 +73,13 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("If single path part provided starts with a root of file system it should be considered.")
     public void testSinglePathPartContainsRoot() {
         test(fs -> {
-            var pathShort = fs.getPath("/tmp");
-            assertEquals("/tmp", pathShort.toString());
+            var pathShortString = joinToPathWithRoot("tmp");
+            var pathShort = fs.getPath(joinToPathWithRoot("tmp"));
+            assertEquals(pathShortString, pathShort.toString());
 
-            var pathLong = fs.getPath("/tmp/some/random/file");
-            assertEquals("/tmp/some/random/file", pathLong.toString());
+            var pathLongString = joinToPathWithRoot("tmp", "some", "random", "file");
+            var pathLong = fs.getPath(pathLongString);
+            assertEquals(pathLongString, pathLong.toString());
         });
     }
 
@@ -85,11 +87,13 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("If single path part provided does not starts with a root of file system it should not be considered.")
     public void testSinglePathPartDoesNotContainsRoot() {
         test(fs -> {
-            var pathShort = fs.getPath("tmp");
-            assertEquals("tmp", pathShort.toString());
+            var pathShortString = joinToPath("tmp");
+            var pathShort = fs.getPath(pathShortString);
+            assertEquals(pathShortString, pathShort.toString());
 
-            var pathLong = fs.getPath("tmp/some/random/file");
-            assertEquals("tmp/some/random/file", pathLong.toString());
+            var pathLongString = joinToPath("tmp", "some", "random", "file");
+            var pathLong = fs.getPath(pathLongString);
+            assertEquals(pathLongString, pathLong.toString());
         });
     }
 
@@ -97,11 +101,15 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("If multiple path parts are provided and first is a root of file system it should be considered.")
     public void testMultiplePathPartsStartsWithRoot() {
         test(fs -> {
-            var pathShort = fs.getPath("/", "tmp");
-            assertEquals("/tmp", pathShort.toString());
+            var rootName = joinToPathWithRoot();
+            var pathShortString = joinToPathWithRoot("tmp");
+            var pathShort = fs.getPath(rootName, "tmp");
+            assertEquals(pathShortString, pathShort.toString());
 
-            var pathLong = fs.getPath("/", "tmp/some" , "/random/file");
-            assertEquals("/tmp/some/random/file", pathLong.toString());
+            var pathLong = fs.getPath(rootName, joinToPath("tmp", "some") ,
+                    joinToPath("random", "file"));
+            var pathLongString = joinToPathWithRoot("tmp", "some", "random", "file");
+            assertEquals(pathLongString, pathLong.toString());
         });
     }
 
@@ -109,9 +117,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When we normalize a path which is already in a normalize state it should return the same path.")
     public void testNormalizeSameFile() {
         test(fs -> {
-            var path = fs.getPath("some/sub/folder/somefile");
+            var pathString = joinToPath("some", "sub", "folder", "somefile");
+            var path = fs.getPath(pathString);
             path = path.normalize();
-            assertEquals("some/sub/folder/somefile", path.toString());
+            assertEquals(pathString, path.toString());
         });
     }
 
@@ -119,10 +128,11 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When you normalize a relative path few levels up, it should jump paths to parent and resolve path from there.")
     public void testRelativeNormalizeJumpUpThePath() {
         test(fs -> {
+            var p1String = joinToPath("some", "sub", "folder", "somefile", ".", "..", "..", "c1");
             // from current position of somefile jump up the folder tree
-            var p1 = fs.getPath("some/sub/folder/somefile/./../../c1");
+            var p1 = fs.getPath(p1String);
             var t1 = p1.normalize();
-            assertEquals("some/sub/c1", t1.toString());
+            assertEquals(joinToPath("some", "sub", "c1"), t1.toString());
         });
     }
 
@@ -130,10 +140,11 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When you normalize a relative path levels up past the start, it should jump to start and resolve path from there.")
     public void testRelativeNormalizeJumpUpPastTheRoot() {
         test(fs -> {
+            var pString = joinToPath("some", "sub", "c1", "..", "..", "..", "..", "..", "..", "d1");
             // jump past the start
-            var p = fs.getPath("some/sub/c1/../../../../../../d1");
+            var p = fs.getPath(pString);
             var t = p.normalize();
-            assertEquals("../../../d1", t.toString());
+            assertEquals(joinToPath("..", "..", "..", "d1"), t.toString());
         });
     }
 
@@ -141,10 +152,11 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When you normalize an absolute path few levels up, it should jump paths to parent and resolve path from there.")
     public void testAbsoluteNormalizeJumpUpThePath() {
         test(fs -> {
+            var p1String = joinToPathWithRoot("some", "sub", "folder", "somefile", "..", "..", "c1");
             // from current position of somefile jump up the folder tree
-            var p1 = fs.getPath("/some/sub/folder/somefile/../../c1");
+            var p1 = fs.getPath(p1String);
             var t1 = p1.normalize();
-            assertEquals("/some/sub/c1", t1.toString());
+            assertEquals(joinToPathWithRoot("some", "sub", "c1"), t1.toString());
         });
     }
 
@@ -152,10 +164,11 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When you normalize an absolute path levels up past the root, it should jump to the root and append path from there.")
     public void testAbsoluteNormalizeJumpUpPastTheRoot() {
         test(fs -> {
+            var pString = joinToPathWithRoot("some", "sub", "c1", "..", "..", "..", "..", "..", "..", "d1");
             // jump past the start
-            var p = fs.getPath("/some/sub/c1/../../../../../../d1");
+            var p = fs.getPath(pString);
             var t = p.normalize();
-            assertEquals("/d1", t.toString());
+            assertEquals(joinToPathWithRoot("d1"), t.toString());
         });
     }
 
@@ -163,10 +176,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When a relative path instance or string is provided for starts with check, on match it should return true.")
     public void testRelativeStartsWithMatch() {
         test(fs -> {
-            var p1 = fs.getPath("some/sub/folder");
-            var p2 = fs.getPath("some/sub/folder/somefile");
+            var p1 = fs.getPath(joinToPath( "some", "sub", "folder"));
+            var p2 = fs.getPath(joinToPath("some", "sub", "folder", "somefile"));
             assertTrue(p2.startsWith(p1), "Path 2 must start with Path 1");
-            assertTrue(p2.startsWith("some/sub/folder"), "Path 2 must start with Path 1");
+            assertTrue(p2.startsWith(joinToPath( "some", "sub", "folder")), "Path 2 must start with Path 1");
         });
     }
 
@@ -174,10 +187,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When a relative path instance or string is provided for starts with check, on no match it should return false.")
     public void testRelativeStartsWithNotMatch() {
         test(fs -> {
-            var p1 = fs.getPath("some/sub/folder");
-            var p2 = fs.getPath("other/sub/folder/somefile");
+            var p1 = fs.getPath(joinToPath( "some", "sub", "folder"));
+            var p2 = fs.getPath(joinToPath("other", "sub", "folder", "somefile"));
             assertFalse(p2.startsWith(p1), "Path 2 does not starts with Path 1");
-            assertFalse(p2.startsWith("some/sub/folder"), "Path 2 does not starts with Path 1");
+            assertFalse(p2.startsWith(joinToPath( "some", "sub", "folder")), "Path 2 does not starts with Path 1");
         });
     }
 
@@ -185,10 +198,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When an absolute path instance or string is provided for starts with check, on match it should return true.")
     public void testAbsoluteStartsWith() {
         test(fs -> {
-            var p1 = fs.getPath("/some/sub/folder");
-            var p2 = fs.getPath("/some/sub/folder/somefile");
+            var p1 = fs.getPath(joinToPath( "some", "sub", "folder"));
+            var p2 = fs.getPath(joinToPath("some", "sub", "folder", "somefile"));
             assertTrue(p2.startsWith(p1), "Path 2 must start with Path 1");
-            assertTrue(p2.startsWith("/some/sub/folder"), "Path 2 must start with Path 1");
+            assertTrue(p2.startsWith(joinToPath( "some", "sub", "folder")), "Path 2 must start with Path 1");
         });
     }
 
@@ -196,10 +209,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When an absolute path instance or string is provided for starts with check, on no match it should return false.")
     public void testAbsoluteStartsWithNotMatch() {
         test(fs -> {
-            var p1 = fs.getPath("/some/sub/folder");
-            var p2 = fs.getPath("/other/sub/folder/somefile");
+            var p1 = fs.getPath(joinToPathWithRoot("some", "sub", "folder", "somefile"));
+            var p2 = fs.getPath(joinToPathWithRoot("other", "sub", "folder", "somefile"));
             assertFalse(p2.startsWith(p1), "Path 2 does not starts with Path 1");
-            assertFalse(p2.startsWith("/some/sub/folder"), "Path 2 does not starts with Path 1");
+            assertFalse(p2.startsWith(joinToPathWithRoot("some", "sub", "folder", "somefile")), "Path 2 does not starts with Path 1");
         });
     }
 
@@ -208,7 +221,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     public void testNotStartsWithCrossFileSystem() throws Exception {
         var p = Paths.get("some/sub/folder");
         test(fs -> {
-            var path = fs.getPath("some/sub/folder/somefile");
+            var path = fs.getPath(joinToPath("some", "sub", "folder", "somefile"));
             assertFalse(path.startsWith(p), "Path 2 must not start with Path 1");
         });
     }
@@ -217,10 +230,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When a relative path instance or string is provided for ends with check, on match it should return true.")
     public void testRelativeEndsWithMatch() {
         test(fs -> {
-            var p1 = fs.getPath("folder/somefile");
-            var p2 = fs.getPath("some/sub/folder/somefile");
+            var p1 = fs.getPath(joinToPath("folder", "somefile"));
+            var p2 = fs.getPath(joinToPath("some", "sub", "folder", "somefile"));
             assertTrue(p2.endsWith(p1), "Path 2 must end with Path 1");
-            assertTrue(p2.endsWith("folder/somefile"), "Path 2 must end with Path 1");
+            assertTrue(p2.endsWith(joinToPath("folder","somefile")), "Path 2 must end with Path 1");
         });
     }
 
@@ -228,10 +241,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When a relative path instance or string is provided for ends with check, on match it should return true.")
     public void testRelativeEndsWithNoMatch() {
         test(fs -> {
-            var p1 = fs.getPath("other/somefile");
-            var p2 = fs.getPath("some/sub/folder/somefile");
+            var p1 = fs.getPath(joinToPath("other", "somefile"));
+            var p2 = fs.getPath(joinToPath("some", "sub", "folder", "somefile"));
             assertFalse(p2.endsWith(p1), "Path 2 must end with Path 1");
-            assertFalse(p2.endsWith("other/somefile"), "Path 2 must end with Path 1");
+            assertFalse(p2.endsWith(joinToPath("other", "somefile")), "Path 2 must end with Path 1");
         });
     }
 
@@ -239,10 +252,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When an absolute path instance or string is provided for ends with check, on match it should return true.")
     public void testAbsoluteEndsWith() {
         test(fs -> {
-            var p1 = fs.getPath("/folder/somefile");
-            var p2 = fs.getPath("/some/sub/folder/somefile");
+            var p1 = fs.getPath(joinToPathWithRoot("folder", "somefile"));
+            var p2 = fs.getPath(joinToPathWithRoot("some", "sub", "folder", "somefile"));
             assertTrue(p2.endsWith(p1), "Path 2 must start with Path 1");
-            assertTrue(p2.endsWith("/folder/somefile"), "Path 2 must start with Path 1");
+            assertTrue(p2.endsWith(joinToPathWithRoot("folder" , "somefile")), "Path 2 must start with Path 1");
         });
     }
 
@@ -250,10 +263,10 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When an absolute path instance or string is provided for ends with check, on no match it should return false.")
     public void testAbsoluteEndsWithNotMatch() {
         test(fs -> {
-            var p1 = fs.getPath("/folder/otherfile");
-            var p2 = fs.getPath("/other/sub/folder/somefile");
+            var p1 = fs.getPath(joinToPathWithRoot("folder", "otherfile"));
+            var p2 = fs.getPath(joinToPathWithRoot("other", "sub", "folder", "somefile"));
             assertFalse(p2.endsWith(p1), "Path 2 does not starts with Path 1");
-            assertFalse(p2.endsWith("/folder/otherfile"), "Path 2 does not starts with Path 1");
+            assertFalse(p2.endsWith(joinToPathWithRoot("folder", "otherfile")), "Path 2 does not starts with Path 1");
         });
     }
 
@@ -262,7 +275,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     public void testNotEndsWithCrossFileSystem() throws Exception {
         var p = Paths.get("folder/somefile");
         test(fs -> {
-            var path = fs.getPath("some/sub/folder/somefile");
+            var path = fs.getPath(joinToPath("some", "sub", "folder", "somefile"));
             assertFalse(path.endsWith(p), "Path 2 must not start with Path 1");
         });
     }
@@ -271,7 +284,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("When a path is already absolute it should return same path.")
     public void testToAbsoluteWhenAlreadyAbsolute() {
         test(fs -> {
-            var path = fs.getPath("/some/path/to/file");
+            var path = fs.getPath(joinToPathWithRoot("some", "path", "to", "file"));
             var absolutePath = path.toAbsolutePath();
             assertEquals(path, absolutePath);
         });
@@ -284,7 +297,7 @@ public abstract class BasePathTest extends BaseFileSystemTest {
             var pathService = fs.getPathService();
             var workingDirectory = pathService.getWorkingDirectory();
 
-            var path = fs.getPath("some/path/to/file");
+            var path = fs.getPath(joinToPath("some", "path", "to", "file"));
             var absolutePath = path.toAbsolutePath();
             var resolved = workingDirectory.resolve(path);
 
@@ -296,8 +309,9 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     @DisplayName("A path instance is matched with another instance pointing to same path in file system, starts and ends with test should be true.")
     public void testEqualPathWithStartsAndEndsWith() {
         test(fs -> {
-            var p1 = fs.getPath("some/sub/folder/somefile");
-            var p2 = fs.getPath("some/sub/folder/somefile");
+            var pString = joinToPath("some", "sub", "folder", "somefile");
+            var p1 = fs.getPath(pString);
+            var p2 = fs.getPath(pString);
             assertTrue(p2.startsWith(p1), "Path 2 must start with Path 1");
             assertTrue(p2.endsWith(p1), "Path 2 must end with Path 1");
             assertTrue(p1.startsWith(p2), "Path 1 must start with Path 2");
@@ -310,10 +324,43 @@ public abstract class BasePathTest extends BaseFileSystemTest {
     public void testToFile() {
         test(fs -> {
             assertThrowsExactly(UnsupportedOperationException.class,
-                    () -> fs.getPath("some/sub/folder/somefile").toFile());
+                    () -> fs.getPath(joinToPath("some", "sub", "folder", "somefile")).toFile());
         });
     }
 
+    @Test
+    @DisplayName("It should resolve siblings")
+    public void testSiblings() {
+        test(fs -> {
+            var p1 = fs.getPath(joinToPath("folder", "sibling1"));
+            var p2 = p1.resolveSibling("sibling2");
+            assertEquals(p2.toString(), joinToPath("folder", "sibling2"));
+        });
+    }
+
+    @Test
+    @DisplayName("It should resolve siblings")
+    public void testRootSiblings() {
+        test(fs -> {
+            var p1 = fs.getPath(joinToPathWithRoot());
+            var p2 = p1.resolveSibling("sibling2");
+            assertEquals(p2.toString(), "sibling2");
+        });
+    }
+
+
     public abstract void testToUri();
+
+    protected String joinToPath(String ...parts) {
+        var separator = getFileSystem().getSeparator();
+        return String.join(separator, parts);
+    }
+
+    protected String joinToPathWithRoot(String ...parts) {
+        var rootName = getFileSystem().getPathService().getRootName();
+        return parts.length > 0 ?
+                rootName + joinToPath(parts) :
+                rootName;
+    }
 
 }
