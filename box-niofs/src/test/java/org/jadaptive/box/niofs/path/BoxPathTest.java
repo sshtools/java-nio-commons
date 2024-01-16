@@ -22,6 +22,11 @@ import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
 import org.jadaptive.niofs.filesys.BaseFileSystem;
 import org.jadaptive.niofs.path.BasePathTest;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BoxPathTest extends BasePathTest {
 
@@ -41,5 +46,15 @@ public class BoxPathTest extends BasePathTest {
         pathService.setFileSystem(fs);
 
         return fs;
+    }
+
+    @Override
+    @Test
+    @DisplayName("Box path URI")
+    public void testToUri() {
+        test(fs -> {
+           var uriString = fs.getPath("/", "some", "path", "to", "file").toUri().toString();
+           assertEquals("box:///some/path/to/file", uriString);
+        });
     }
 }
