@@ -78,26 +78,49 @@ public class BoxPathService extends BasePathService {
             return (BoxPath) createEmptyPath();
         }
 
-        var parts = new ArrayList<String>();
-        parts.add(first);
-        parts.addAll(Arrays.asList(more));
+        var regExFriendlySeparator = getFileSystem().getRegExFriendlySeparator();
 
-        var nonEmptyParts = parts
+        var allPartsTogether = new ArrayList<String>();
+        allPartsTogether.add(first);
+        allPartsTogether.addAll(Arrays.asList(more));
+
+        var hasRoot = false;
+        var relativePart = "";
+
+        var iterator = allPartsTogether.listIterator();
+        while (iterator.hasNext()) {
+            var part = iterator.next();
+            var strippedLeadingPart = part.stripLeading();
+            // if there is no relative part found so far and stripped leading starts with root
+            // we have our part with a root
+            if (relativePart.isBlank() && strippedLeadingPart.startsWith(getRootName())) {
+                hasRoot = true;
+                var rootPart = strippedLeadingPart.replaceFirst(getRootName(), "");
+                iterator.set(rootPart);
+                break;
+            }
+
+            // mark a relative part
+            // if we find one we do not have a root, it is a relative path
+            if (!part.isBlank()) {
+                relativePart = part;
+            }
+        }
+
+        // collect all the parts, by splitting given arguments by separator
+        var nonEmptyParts = allPartsTogether
                 .stream()
-                .filter(p -> !p.isBlank())
+                .flatMap(p -> Stream.of(p.split(regExFriendlySeparator)))
+                .filter(p -> !p.isEmpty())
                 .collect(Collectors.toList());
 
-        if (nonEmptyParts.isEmpty()) {
+        // only root will have non empty pats, hence !hasRoot part
+        if (!hasRoot && nonEmptyParts.isEmpty()) {
             return (BoxPath) createEmptyPath();
         }
 
-        var hasRoot = nonEmptyParts.get(0).equals(getRootName());
-
-        var concatenatedPath = String.join("", nonEmptyParts);
-
-        var finalNames = getFileSystem().getNamesForPath(concatenatedPath);
-
-        return hasRoot ? createPath(getRootName(), finalNames) : createPath(null, finalNames);
+        return hasRoot ? createPath(getRootName(), nonEmptyParts)
+                : createPath(null, nonEmptyParts);
     }
 
     @Override
@@ -182,7 +205,6 @@ public class BoxPathService extends BasePathService {
         }
 
         var authority = uri.getRawAuthority();
-        System.out.println("The authority is " + authority);
         if (authority != null) {
             throw new IllegalStateException("Authority is not required.");
         }
