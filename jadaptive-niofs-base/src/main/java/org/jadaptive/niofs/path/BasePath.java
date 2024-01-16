@@ -204,7 +204,8 @@ public abstract class BasePath implements Path {
         if (isAbsolute()) {
             return this;
         }
-        return getBasePathService().createPath(getBasePathService().getRootName(), this.names);
+
+        return getBasePathService().getWorkingDirectory().resolve(this);
     }
 
     @Override
