@@ -114,7 +114,7 @@ public class BoxPathService extends BasePathService {
                 .filter(p -> !p.isEmpty())
                 .collect(Collectors.toList());
 
-        // only root will have non empty pats, hence !hasRoot part
+        // only root will have non empty parts, hence !hasRoot part
         if (!hasRoot && nonEmptyParts.isEmpty()) {
             return (BoxPath) createEmptyPath();
         }
