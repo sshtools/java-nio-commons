@@ -28,4 +28,6 @@ public abstract class BaseFileSystem extends FileSystem {
     }
 
     public abstract BasePathService getPathService();
+
+    public abstract String getRegExFriendlySeparator();
 }

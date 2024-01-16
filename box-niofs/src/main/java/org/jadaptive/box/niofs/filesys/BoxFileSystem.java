@@ -128,11 +128,16 @@ public class BoxFileSystem extends BaseFileSystem {
 			return Collections.emptyList();
 		}
 
-		return Arrays.stream(path.split(SEPARATOR)).collect(Collectors.toList());
+		return Arrays.stream(path.split(getRegExFriendlySeparator())).collect(Collectors.toList());
 	}
 
 	@Override
 	public BoxPathService getPathService() {
 		return (BoxPathService) this.basePathService;
+	}
+
+	@Override
+	public String getRegExFriendlySeparator() {
+		return SEPARATOR;
 	}
 }
