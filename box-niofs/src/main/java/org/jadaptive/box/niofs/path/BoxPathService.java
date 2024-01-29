@@ -21,7 +21,10 @@ import org.jadaptive.niofs.path.BasePathService;
 
 import java.net.URI;
 import java.nio.file.FileSystem;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -65,6 +68,15 @@ public class BoxPathService extends BasePathService {
     @Override
     public BoxPath createPath(String root, List<String> names) {
         return new BoxPath(this, root, names);
+    }
+
+    @Override
+    public BoxPath getPath(String[] paths) {
+        if (paths == null || paths.length == 0) {
+            throw new IllegalArgumentException("Arguments passed cannot be null or empty.");
+        }
+        return paths.length > 1 ? getPath(paths[0], Arrays.copyOfRange(paths, 1, paths.length))
+                : getPath(paths[0]);
     }
 
     @Override

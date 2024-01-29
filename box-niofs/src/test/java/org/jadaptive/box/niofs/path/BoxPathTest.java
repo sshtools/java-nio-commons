@@ -15,7 +15,7 @@
  */
 package org.jadaptive.box.niofs.path;
 
-import org.jadaptive.box.niofs.api.BoxRemoteAPI;
+import org.jadaptive.box.niofs.api.MockBoxRemoteAPI;
 import org.jadaptive.box.niofs.api.client.locator.BoxConnectionAPILocator;
 import org.jadaptive.box.niofs.filesys.BoxFileSystem;
 import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
@@ -25,14 +25,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BoxPathTest extends BasePathTest {
 
     @BeforeAll
     static void init() {
-        BoxConnectionAPILocator.setBoxRemoteAPI(new BoxRemoteAPI() {});
+        BoxConnectionAPILocator.setBoxRemoteAPI(new MockBoxRemoteAPI() {});
     }
 
     @Override

@@ -17,6 +17,7 @@ package org.jadaptive.box.niofs.filesys;
 
 import org.jadaptive.box.niofs.api.BoxRemoteAPI;
 import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
+import org.jadaptive.box.niofs.path.BoxPath;
 import org.jadaptive.box.niofs.path.BoxPathService;
 import org.jadaptive.niofs.filesys.BaseFileSystem;
 
@@ -91,7 +92,7 @@ public class BoxFileSystem extends BaseFileSystem {
 	}
 
 	@Override
-	public Path getPath(String first, String... more) {
+	public BoxPath getPath(String first, String... more) {
 		return getPathService().getPath(first, more);
 	}
 
@@ -139,5 +140,9 @@ public class BoxFileSystem extends BaseFileSystem {
 	@Override
 	public String getRegExFriendlySeparator() {
 		return SEPARATOR;
+	}
+
+	public BoxRemoteAPI getBoxRemoteAPI() {
+		return boxRemoteAPI;
 	}
 }

@@ -73,8 +73,8 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	@Override
 	public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs)
 			throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		checkPath(path);
+		return boxFileSystem.getBoxRemoteAPI().newByteChannel((BoxPath) path, options, attrs);
 	}
 
 	@Override
@@ -84,27 +84,30 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public void createDirectory(Path dir, FileAttribute<?>... attrs) throws IOException {
-		// TODO Auto-generated method stub
-		
+	public void createDirectory(Path path, FileAttribute<?>... attrs) {
+		checkPath(path);
+		boxFileSystem.getBoxRemoteAPI().createDirectory((BoxPath) path, attrs);
 	}
 
 	@Override
 	public void delete(Path path) throws IOException {
-		// TODO Auto-generated method stub
-		
+		checkPath(path);
+		boxFileSystem.getBoxRemoteAPI().delete((BoxPath) path);
 	}
 
 	@Override
 	public void copy(Path source, Path target, CopyOption... options) throws IOException {
-		// TODO Auto-generated method stub
+		checkPath(source);
+		checkPath(target);
+		boxFileSystem.getBoxRemoteAPI().copy((BoxPath) source, (BoxPath) target, options);
 		
 	}
 
 	@Override
 	public void move(Path source, Path target, CopyOption... options) throws IOException {
-		// TODO Auto-generated method stub
-		
+		checkPath(source);
+		checkPath(target);
+		boxFileSystem.getBoxRemoteAPI().move((BoxPath) source, (BoxPath) target, options);
 	}
 
 	@Override
@@ -140,14 +143,14 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	@Override
 	public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options)
 			throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		checkPath(path);
+		return boxFileSystem.getBoxRemoteAPI().readAttributes((BoxPath) path, options);
 	}
 
 	@Override
 	public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		checkPath(path);
+		return boxFileSystem.getBoxRemoteAPI().readAttributes((BoxPath) path, attributes, options);
 	}
 
 	@Override
@@ -168,5 +171,14 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 				}
 			}
 		}
+	}
+
+	private void checkPath(Path dir) {
+		if (!isSameInstance(dir)) {
+			throw new IllegalArgumentException("Path is not an instance of BoxPath.");
+		}
+	}
+	private boolean isSameInstance(Path path) {
+		return path instanceof BoxPath;
 	}
 }

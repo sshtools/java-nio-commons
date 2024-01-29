@@ -1,6 +1,6 @@
 package org.jadaptive.box.niofs.path;
 
-import org.jadaptive.box.niofs.api.BoxRemoteAPI;
+import org.jadaptive.box.niofs.api.MockBoxRemoteAPI;
 import org.jadaptive.box.niofs.api.client.locator.BoxConnectionAPILocator;
 import org.jadaptive.box.niofs.filesys.BoxFileSystem;
 import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
@@ -12,7 +12,7 @@ public class BoxPathServiceTest extends BasePathServiceTest {
 
     @BeforeAll
     static void init() {
-        BoxConnectionAPILocator.setBoxRemoteAPI(new BoxRemoteAPI() {});
+        BoxConnectionAPILocator.setBoxRemoteAPI(new MockBoxRemoteAPI() {});
     }
 
     @Override

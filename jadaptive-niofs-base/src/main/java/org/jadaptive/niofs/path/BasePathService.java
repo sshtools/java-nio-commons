@@ -34,6 +34,7 @@ public abstract class BasePathService {
     public BasePath createEmptyPath() {
         return createPath(null, List.of(""));
     }
+    public abstract BasePath getPath(String[] paths);
     public abstract BasePath getPath(String first, String... more);
     public abstract BasePath getPath(URI uri);
     public abstract BasePath getWorkingDirectory();
