@@ -39,27 +39,27 @@ public class JadNioFileAttributes implements BasicFileAttributes {
 
     @Override
     public FileTime lastModifiedTime() {
-        return null;
+        return this.lastModifiedTime;
     }
 
     @Override
     public FileTime lastAccessTime() {
-        return null;
+        return this.lastAccessTime;
     }
 
     @Override
     public FileTime creationTime() {
-        return null;
+        return this.creationTime;
     }
 
     @Override
     public boolean isRegularFile() {
-        return false;
+        return this.regularFile;
     }
 
     @Override
     public boolean isDirectory() {
-        return false;
+        return !isRegularFile();
     }
 
     @Override
@@ -74,12 +74,12 @@ public class JadNioFileAttributes implements BasicFileAttributes {
 
     @Override
     public long size() {
-        return 0;
+        return this.size;
     }
 
     @Override
     public String fileKey() {
-        return null;
+        return this.fileKey;
     }
 
     public FileTime getCreationTime() {
