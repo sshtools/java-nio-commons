@@ -23,6 +23,7 @@ import org.jadaptive.box.niofs.api.auth.session.AuthenticatedSession;
 import org.jadaptive.box.niofs.api.channel.BoxSeekableByteChannel;
 import org.jadaptive.box.niofs.api.folder.BoxFolderTree;
 import org.jadaptive.box.niofs.api.folder.BoxResource;
+import org.jadaptive.box.niofs.api.folder.BoxResourceType;
 import org.jadaptive.box.niofs.exception.BoxFileAlreadyExistsFoundException;
 import org.jadaptive.box.niofs.exception.BoxFileNotFoundException;
 import org.jadaptive.box.niofs.exception.BoxParentPathInvalidException;
@@ -40,6 +41,7 @@ import java.nio.file.OpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
@@ -92,19 +94,22 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
 
         var resourceInBox = BoxFolderTree.walk(pathNames, api);
 
-        deleteFolderResource(resourceInBox, api);
+        deleteResource(resourceInBox, api);
 
-        logger.info("Folder deleted with id '{}'", resourceInBox.id);
+        logger.info("Box resource '{}' deleted with id '{}'", resourceInBox.resourceType, resourceInBox.id);
     }
 
     @Override
     public void copy(BoxPath source, BoxPath target, CopyOption...options) {
 
+        var targetName = target.getFileName().toString();
+
         var pair = sourceTargetResources(source,target);
 
         var api = getBoxAPIConnection();
 
-        var copied = copyFolderResource(pair.first, pair.second, api);
+        var copied = actOnSourceTargetResources(pair.first, pair.second, api,
+                (s, t) -> s.copy(t, targetName), BoxFolder::copy);
 
         logger.info("Folder copied '{}' with id '{}'", copied.getName(), copied.getID());
     }
@@ -112,11 +117,14 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
     @Override
     public void move(BoxPath source, BoxPath target, CopyOption...options) {
 
+        var targetName = target.getFileName().toString();
+
         var pair = sourceTargetResources(source,target);
 
         var api = getBoxAPIConnection();
 
-        var moved = moveFolderResource(pair.first, pair.second, api);
+        var moved = actOnSourceTargetResources(pair.first, pair.second, api,
+                (s, t) -> s.move(t, targetName), BoxFolder::move);
 
         logger.info("Folder moved '{}' with id '{}'", moved.getName(), moved.getID());
     }
@@ -138,7 +146,7 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
         var resource = BoxFolderTree.walk(pathNames, api);
 
         if (resource instanceof BoxResource.NullBoxResource) {
-            throw new IllegalArgumentException("Parent path is not present in remote account.");
+            throw new BoxParentPathInvalidException("Parent path is not present in remote account.");
         }
 
         var current = normalizePath.getFileName();
@@ -151,7 +159,7 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
             }
         }
 
-        throw new IllegalArgumentException("Resource does not exists.");
+        throw new BoxFileNotFoundException("Resource does not exists.");
     }
 
     @Override
@@ -261,12 +269,22 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
         var normalizeTargetPath = getNormalizePath(target);
         var targetPathNames = normalizeTargetPath.getNames();
 
-        logger.info("The target path normalized as {}", normalizeTargetPath);
-
         var api = getBoxAPIConnection();
 
+        var targetResourceInBox  = BoxFolderTree.walk(targetPathNames, api);
+
+        if (targetResourceInBox instanceof BoxResource.NullBoxResource
+                || targetResourceInBox.resourceType == BoxResourceType.File) {
+
+            var parent = normalizeTargetPath.getParent();
+            var parentPathNames = parent.getNames();
+
+            logger.info("Checking for parent path for target {}", parent);
+
+            targetResourceInBox = BoxFolderTree.walk(parentPathNames, api);
+        }
+
         var sourceResourceInBox = BoxFolderTree.walk(sourcePathNames, api);
-        var targetResourceInBox = BoxFolderTree.walk(targetPathNames, api);
 
         return new Pair<>(sourceResourceInBox, targetResourceInBox);
     }
@@ -329,17 +347,26 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
         return parentFolder.createFolder(current.toString());
     }
 
-    private static void deleteFolderResource(BoxResource resource, BoxAPIConnection api) {
+    private static void deleteResource(BoxResource resource, BoxAPIConnection api) {
         if (resource instanceof BoxResource.NullBoxResource) {
             throw new BoxFileNotFoundException("Folder is not present in remote account.");
         }
 
-        var folder = new BoxFolder(api, resource.id);
-        folder.delete(true);
+        if (resource.resourceType == BoxResourceType.Folder) {
+            var folder = new BoxFolder(api, resource.id);
+            folder.delete(true);
+        } else {
+            var file = new BoxFile(api, resource.id);
+            file.delete();
+        }
 
     }
 
-    private static BoxFolder.Info copyFolderResource(BoxResource sourceResource, BoxResource targetResource, BoxAPIConnection api) {
+    private static BoxItem.Info actOnSourceTargetResources(BoxResource sourceResource,
+                                                           BoxResource targetResource,
+                                                           BoxAPIConnection api,
+                                                           BiFunction<BoxFile, BoxFolder, BoxItem.Info> fileToFolderStrategy,
+                                                           BiFunction<BoxFolder, BoxFolder, BoxItem.Info> folderToFolderStrategy) {
 
         if (sourceResource instanceof BoxResource.NullBoxResource) {
             throw new IllegalArgumentException("Source path is not present in remote account.");
@@ -349,26 +376,25 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
             throw new IllegalArgumentException("Target path is not present in remote account.");
         }
 
-        BoxFolder source = new BoxFolder(api, sourceResource.id);
-        BoxFolder target = new BoxFolder(api, targetResource.id);
+        if (sourceResource.resourceType == BoxResourceType.Folder
+            && targetResource.resourceType == BoxResourceType.Folder) {
 
-        return source.copy(target);
-    }
+            var sourceFolder = new BoxFolder(api, sourceResource.id);
+            var targetFolder = new BoxFolder(api, targetResource.id);
 
-    private static BoxItem.Info moveFolderResource(BoxResource sourceResource, BoxResource targetResource, BoxAPIConnection api) {
+            return folderToFolderStrategy.apply(sourceFolder, targetFolder);
+        } else if (sourceResource.resourceType == BoxResourceType.File
+            && targetResource.resourceType == BoxResourceType.Folder) {
 
-        if (sourceResource instanceof BoxResource.NullBoxResource) {
-            throw new BoxFileNotFoundException("Source path is not present in remote account.");
+            var sourceFile = new BoxFile(api, sourceResource.id);
+            var targetFolder = new BoxFolder(api, targetResource.id);
+
+            return fileToFolderStrategy.apply(sourceFile, targetFolder);
+
+        } else {
+            throw new IllegalStateException("Source and Target combination not understood.");
         }
 
-        if (targetResource instanceof BoxResource.NullBoxResource) {
-            throw new BoxFileNotFoundException("Target path is not present in remote account.");
-        }
-
-        BoxFolder source = new BoxFolder(api, sourceResource.id);
-        BoxFolder target = new BoxFolder(api, targetResource.id);
-
-        return source.move(target);
     }
 
     private static BoxPath normalizeForAbsolutePath(BoxPath dir) {
