@@ -21,16 +21,20 @@ public class BoxResource {
 
     public final String id;
 
+    public final String name;
+
     public final BoxResourceType resourceType;
 
-    public BoxResource(String id, BoxResourceType resourceType) {
+
+    public BoxResource(String id, String name, BoxResourceType resourceType) {
         this.id = id;
+        this.name = name;
         this.resourceType = resourceType;
     }
 
     public static class NullBoxResource extends BoxResource {
         private NullBoxResource() {
-            super(null, null);
+            super(null, null, null);
         }
     }
 }

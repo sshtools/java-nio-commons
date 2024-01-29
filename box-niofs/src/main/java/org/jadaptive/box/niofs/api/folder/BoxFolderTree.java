@@ -16,6 +16,7 @@
 package org.jadaptive.box.niofs.api.folder;
 
 import com.box.sdk.BoxAPIConnection;
+import com.box.sdk.BoxFile;
 import com.box.sdk.BoxFolder;
 import com.box.sdk.BoxItem;
 
@@ -25,17 +26,14 @@ public class BoxFolderTree {
 
     public static BoxResource walk(Collection<String> pathToCheck, BoxAPIConnection api) {
         var rootFolder = BoxFolder.getRootFolder(api);
-        return walk(pathToCheck.toArray(new String[0]), 0, rootFolder, api);
-    }
-    public static BoxResource walk(String[] pathToCheck, BoxAPIConnection api) {
-        var rootFolder = BoxFolder.getRootFolder(api);
-        return walk(pathToCheck, 0, rootFolder, api);
+        return walk(pathToCheck.toArray(new String[0]), 0, rootFolder, "ROOT", api);
     }
 
-    private static BoxResource walk(String[] pathToCheck, int index, BoxFolder current, BoxAPIConnection api) {
+    private static BoxResource walk(String[] pathToCheck, int index, BoxFolder current, String name,
+                                    BoxAPIConnection api) {
         // all paths matched all exists return true
         if (index == pathToCheck.length) {
-            return new BoxResource(current.getID(), BoxResourceType.Folder);
+            return new BoxResource(current.getID(), name, BoxResourceType.Folder);
         }
 
         for (BoxItem.Info itemInfo : current) {
@@ -43,7 +41,12 @@ public class BoxFolderTree {
                 var folderName = itemInfo.getName();
                 if (folderName.equals(pathToCheck[index])) {
                     var latest = new BoxFolder(api, itemInfo.getID());
-                    return walk(pathToCheck, ++index, latest, api);
+                    return walk(pathToCheck, ++index, latest, folderName, api);
+                }
+            } else if (index == (pathToCheck.length - 1) && itemInfo instanceof BoxFile.Info) {
+                var fileName = itemInfo.getName();
+                if (fileName.equals(pathToCheck[index])) {
+                    return new BoxResource(itemInfo.getID(), itemInfo.getName(), BoxResourceType.File);
                 }
             }
         }
