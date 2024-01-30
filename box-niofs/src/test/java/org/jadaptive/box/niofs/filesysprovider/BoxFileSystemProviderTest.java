@@ -287,6 +287,37 @@ public class BoxFileSystemProviderTest {
         });
     }
 
+    @Test
+    @DisplayName("It should return true for to paths pointing to same file, false otherwise.")
+    void testFileSame() throws IOException {
+        var provider = getNewBoxFileSystemProvider();
+
+        var sourceDirectory = provider.getPath(getPath("box:///test_box/test_file_same"));
+
+        provider.createDirectory(sourceDirectory);
+
+        String sourcePath = "box:///test_box/test_file_same/file_to_copy.txt";
+
+        writeFileInBox(provider,
+                provider.getPath(getPath(sourcePath)),
+                Path.of("src/test/resources/data/file_with_content.txt"));
+
+        var path1 = provider.getPath(getPath("box:///test_box/test_file_same/file.txt"));
+        var path2 = provider.getPath(getPath("box:///test_box/test_file_same/file.txt"));
+        var path3 = provider.getPath(getPath("box:///test_box/test_file_same/another_folder/../file.txt"));
+        var path4 = provider.getPath(getPath("box:///test_box/test_file_same/to/another/../../file.txt"));
+        var path5 = provider.getPath(getPath("box:///test_box/test_file_same/to/another/../../../file.txt"));
+
+
+        // test same
+        assertTrue(provider.isSameFile(path1, path2));
+        assertTrue(provider.isSameFile(path1, path3));
+        assertTrue(provider.isSameFile(path1, path4));
+
+        // test different
+        assertFalse(provider.isSameFile(path1, path5));
+    }
+
     private static BoxFileSystemProvider getNewBoxFileSystemProvider() {
         var boxRemoteAPI = BoxConnectionAPILocator.getBoxRemoteAPI();
         var pathService = new BoxPathService();
