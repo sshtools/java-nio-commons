@@ -16,6 +16,7 @@
 package org.jadaptive.box.niofs.filesysprovider;
 
 import org.jadaptive.box.niofs.api.client.locator.BoxConnectionAPILocator;
+import org.jadaptive.box.niofs.attr.BoxNioFileAttributeView;
 import org.jadaptive.box.niofs.filesys.BoxFileSystem;
 import org.jadaptive.box.niofs.path.BoxPath;
 import org.jadaptive.box.niofs.path.BoxPathService;
@@ -90,7 +91,7 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public void delete(Path path) throws IOException {
+	public void delete(Path path) {
 		checkPath(path);
 		boxFileSystem.getBoxRemoteAPI().delete((BoxPath) path);
 	}
@@ -104,22 +105,25 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public void move(Path source, Path target, CopyOption... options) throws IOException {
+	public void move(Path source, Path target, CopyOption... options) {
 		checkPath(source);
 		checkPath(target);
 		boxFileSystem.getBoxRemoteAPI().move((BoxPath) source, (BoxPath) target, options);
 	}
 
 	@Override
-	public boolean isSameFile(Path path, Path path2) throws IOException {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isSameFile(Path path1, Path path2) {
+		if(path1 instanceof BoxPath && path2 instanceof BoxPath && Files.exists(path1) && Files.exists(path2)) {
+			var full1 = path1.toAbsolutePath();
+			var full2 = path2.toAbsolutePath();
+			return full1.equals(full2);
+		} else
+			return false;
 	}
 
 	@Override
-	public boolean isHidden(Path path) throws IOException {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isHidden(Path path) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -135,26 +139,26 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public <V extends FileAttributeView> V getFileAttributeView(Path path, Class<V> type, LinkOption... options) {
-		// TODO Auto-generated method stub
-		return null;
+		checkPath(path);
+		return (V) new BoxNioFileAttributeView(boxFileSystem.getBoxRemoteAPI(), (BoxPath) path);
 	}
 
 	@Override
-	public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options)
-			throws IOException {
+	public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options) {
 		checkPath(path);
 		return boxFileSystem.getBoxRemoteAPI().readAttributes((BoxPath) path, options);
 	}
 
 	@Override
-	public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
+	public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) {
 		checkPath(path);
 		return boxFileSystem.getBoxRemoteAPI().readAttributes((BoxPath) path, attributes, options);
 	}
 
 	@Override
-	public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
+	public void setAttribute(Path path, String attribute, Object value, LinkOption... options) {
 		// TODO Auto-generated method stub
 		
 	}
