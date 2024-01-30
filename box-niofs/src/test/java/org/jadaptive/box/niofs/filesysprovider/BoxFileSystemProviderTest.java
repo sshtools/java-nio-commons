@@ -115,34 +115,7 @@ public class BoxFileSystemProviderTest {
     }
 
     @Test
-    @DisplayName("It should copy file one directory to another.")
-    void testShouldCopyFileFromOneDirectoryToAnother() throws URISyntaxException, IOException {
-        var provider = getNewBoxFileSystemProvider();
-
-        var sourceDirectory = provider.getPath(getPath("box:///test_box/copy_source"));
-        var destinationDirectory = provider.getPath(getPath("box:///test_box/copy_destination"));
-
-        provider.createDirectory(sourceDirectory);
-        provider.createDirectory(destinationDirectory);
-
-        writeFileInBox(provider,
-                provider.getPath(getPath("box:///test_box/copy_source/file_to_copy.txt")),
-                Path.of("src/test/resources/data/file_with_content.txt"));
-
-
-        var sourceFile = provider.getPath(getPath("box:///test_box/copy_source/file_to_copy.txt"));
-        var destinationFile = provider.getPath(getPath("box:///test_box/copy_destination/file_to_copy.txt"));
-
-        provider.copy(sourceFile, destinationFile);
-
-        var attributes = provider.readAttributes(destinationFile , BasicFileAttributes.class);
-
-        assertNotNull(attributes);
-        assertTrue(attributes.isRegularFile());
-    }
-
-    @Test
-    @DisplayName("It should delete a file")
+    @DisplayName("It should delete a file.")
     void testDeleteFile() throws IOException {
 
         var provider = getNewBoxFileSystemProvider();
@@ -164,8 +137,88 @@ public class BoxFileSystemProviderTest {
     }
 
     @Test
+    @DisplayName("It should throw exception if file to delete is not present in Box.")
+    void testShouldThrowExceptionIfDeleteFileDoesNotExists() {
+
+        var provider = getNewBoxFileSystemProvider();
+
+        var fileToDeletePath = provider.getPath(getPath("box:///test_box/test_delete_does_not_exists.txt"));
+
+        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+            provider.delete(fileToDeletePath);
+        });
+    }
+
+    @Test
+    @DisplayName("It should copy file one directory to another.")
+    void testShouldCopyFileFromOneDirectoryToAnother() throws IOException {
+        var provider = getNewBoxFileSystemProvider();
+
+        var sourceDirectory = provider.getPath(getPath("box:///test_box/copy_source"));
+        var destinationDirectory = provider.getPath(getPath("box:///test_box/copy_destination"));
+
+        provider.createDirectory(sourceDirectory);
+        provider.createDirectory(destinationDirectory);
+
+        String sourcePath = "box:///test_box/copy_source/file_to_copy.txt";
+        writeFileInBox(provider,
+                provider.getPath(getPath(sourcePath)),
+                Path.of("src/test/resources/data/file_with_content.txt"));
+
+
+        var sourceFile = provider.getPath(getPath(sourcePath));
+        var destinationFile = provider.getPath(getPath("box:///test_box/copy_destination/file_to_copy.txt"));
+
+        provider.copy(sourceFile, destinationFile);
+
+        var attributes = provider.readAttributes(destinationFile , BasicFileAttributes.class);
+
+        assertNotNull(attributes);
+        assertTrue(attributes.isRegularFile());
+    }
+
+    @Test
+    @DisplayName("It should copy file one directory to another.")
+    void testShouldThrowExceptionIfSourceIsNotPresentCopyFileFromOneDirectoryToAnother() throws IOException {
+        var provider = getNewBoxFileSystemProvider();
+
+        var sourceFile = provider.getPath(getPath("box:///test_box/copy_source_file_does_not_exists.txt"));
+        var destinationDirectory = provider.getPath(getPath("box:///test_box/copy_destination_exception"));
+
+        provider.createDirectory(destinationDirectory);
+
+        var destinationFile = provider.getPath(getPath("box:///test_box/copy_destination/file_to_copy.txt"));
+
+        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+            provider.copy(sourceFile, destinationFile);
+        });
+    }
+
+    @Test
+    @DisplayName("It should copy file one directory to another.")
+    void testShouldThrowExceptionIfDestinationIsNotPresentCopyFileFromOneDirectoryToAnother() throws IOException {
+        var provider = getNewBoxFileSystemProvider();
+
+        var sourceDirectory = provider.getPath(getPath("box:///test_box/copy_source_destination_missing"));
+
+        provider.createDirectory(sourceDirectory);
+
+        String sourcePath = "box:///test_box/copy_source_destination_missing/file_to_copy.txt";
+        writeFileInBox(provider,
+                provider.getPath(getPath(sourcePath)),
+                Path.of("src/test/resources/data/file_with_content.txt"));
+
+        var sourceFile = provider.getPath(getPath(sourcePath));
+        var destinationFile = provider.getPath(getPath("box:///test_box/copy_destination_not_present/file_to_copy.txt"));
+
+        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+            provider.copy(sourceFile, destinationFile);
+        });
+    }
+
+    @Test
     @DisplayName("It should move file one directory to another.")
-    void testShouldMoveFileFromOneDirectoryToAnother() throws URISyntaxException, IOException {
+    void testShouldMoveFileFromOneDirectoryToAnother() throws IOException {
         var provider = getNewBoxFileSystemProvider();
 
         var sourceDirectory = provider.getPath(getPath("box:///test_box/move_source"));
@@ -174,12 +227,13 @@ public class BoxFileSystemProviderTest {
         provider.createDirectory(sourceDirectory);
         provider.createDirectory(destinationDirectory);
 
+        String sourcePath = "box:///test_box/move_source/file_to_move.txt";
         writeFileInBox(provider,
-                provider.getPath(getPath("box:///test_box/move_source/file_to_move.txt")),
+                provider.getPath(getPath(sourcePath)),
                 Path.of("src/test/resources/data/file_with_content.txt"));
 
 
-        var sourceFile = provider.getPath(getPath("box:///test_box/move_source/file_to_move.txt"));
+        var sourceFile = provider.getPath(getPath(sourcePath));
         var destinationFile = provider.getPath(getPath("box:///test_box/move_destination/file_to_move.txt"));
 
         provider.move(sourceFile, destinationFile);
@@ -194,6 +248,44 @@ public class BoxFileSystemProviderTest {
         });
     }
 
+    @Test
+    @DisplayName("It should copy file one directory to another.")
+    void testShouldThrowExceptionIfSourceIsNotPresentMoveFileFromOneDirectoryToAnother() throws IOException {
+        var provider = getNewBoxFileSystemProvider();
+
+        var sourceFile = provider.getPath(getPath("box:///test_box/move_source_file_does_not_exists.txt"));
+        var destinationDirectory = provider.getPath(getPath("box:///test_box/move_destination_exception"));
+
+        provider.createDirectory(destinationDirectory);
+
+        var destinationFile = provider.getPath(getPath("box:///test_box/move_destination/file_to_copy.txt"));
+
+        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+            provider.move(sourceFile, destinationFile);
+        });
+    }
+
+    @Test
+    @DisplayName("It should copy file one directory to another.")
+    void testShouldThrowExceptionIfDestinationIsNotPresentMoveFileFromOneDirectoryToAnother() throws IOException {
+        var provider = getNewBoxFileSystemProvider();
+
+        var sourceDirectory = provider.getPath(getPath("box:///test_box/move_source_destination_missing"));
+
+        provider.createDirectory(sourceDirectory);
+
+        String sourcePath = "box:///test_box/move_source_destination_missing/file_to_copy.txt";
+        writeFileInBox(provider,
+                provider.getPath(getPath(sourcePath)),
+                Path.of("src/test/resources/data/file_with_content.txt"));
+
+        var sourceFile = provider.getPath(getPath(sourcePath));
+        var destinationFile = provider.getPath(getPath("box:///test_box/move_destination_not_present/file_to_copy.txt"));
+
+        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+            provider.move(sourceFile, destinationFile);
+        });
+    }
 
     private static BoxFileSystemProvider getNewBoxFileSystemProvider() {
         var boxRemoteAPI = BoxConnectionAPILocator.getBoxRemoteAPI();
