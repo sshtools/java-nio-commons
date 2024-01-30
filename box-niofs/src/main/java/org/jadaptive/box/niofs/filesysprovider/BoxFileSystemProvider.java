@@ -114,8 +114,8 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	@Override
 	public boolean isSameFile(Path path1, Path path2) {
 		if(path1 instanceof BoxPath && path2 instanceof BoxPath && Files.exists(path1) && Files.exists(path2)) {
-			var full1 = path1.toAbsolutePath();
-			var full2 = path2.toAbsolutePath();
+			var full1 = path1.normalize().toAbsolutePath();
+			var full2 = path2.normalize().toAbsolutePath();
 			return full1.equals(full2);
 		} else
 			return false;
@@ -133,9 +133,9 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public void checkAccess(Path path, AccessMode... modes) throws IOException {
-		// TODO Auto-generated method stub
-		
+	public void checkAccess(Path path, AccessMode... modes) {
+		checkPath(path);
+		boxFileSystem.getBoxRemoteAPI().getBoxFileInfo((BoxPath) path);
 	}
 
 	@Override
