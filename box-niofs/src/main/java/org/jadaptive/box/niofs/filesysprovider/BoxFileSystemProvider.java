@@ -49,18 +49,12 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 
 	@Override
 	public BoxFileSystem newFileSystem(URI uri, Map<String, ?> env) {
-		// TODO we support such construction
-		//checkURI(uri);
-		// TODO check uri passed is at root i.e. '/', we do not support any other
-		initBoxFileSystem();
-		return boxFileSystem;
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public BoxFileSystem getFileSystem(URI uri) {
-		// TODO we support such construction
-		// TODO check uri is root '/' else throw error
-		return newFileSystem(uri, Collections.emptyMap());
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
