@@ -369,11 +369,11 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
                                                            BiFunction<BoxFolder, BoxFolder, BoxItem.Info> folderToFolderStrategy) {
 
         if (sourceResource instanceof BoxResource.NullBoxResource) {
-            throw new IllegalArgumentException("Source path is not present in remote account.");
+            throw new BoxFileNotFoundException("Source path is not present in remote account.");
         }
 
         if (targetResource instanceof BoxResource.NullBoxResource) {
-            throw new IllegalArgumentException("Target path is not present in remote account.");
+            throw new BoxFileNotFoundException("Target path is not present in remote account.");
         }
 
         if (sourceResource.resourceType == BoxResourceType.Folder
