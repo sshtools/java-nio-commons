@@ -15,24 +15,42 @@
  */
 package org.jadaptive.box.niofs.filestore;
 
-import org.jadaptive.box.niofs.filesys.BoxFileSystem;
+import org.jadaptive.box.niofs.api.BoxRemoteAPI;
 
-import java.io.IOException;
 import java.nio.file.FileStore;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileStoreAttributeView;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BoxFileStore extends FileStore {
 
-    private final BoxFileSystem boxFileSystem;
-    public BoxFileStore(BoxFileSystem boxFileSystem) {
-        this.boxFileSystem = boxFileSystem;
+    private final BoxRemoteAPI boxRemoteAPI;
+
+    private volatile String name;
+
+    private final Lock lock = new ReentrantLock();
+
+    public BoxFileStore(BoxRemoteAPI boxRemoteAPI) {
+        this.boxRemoteAPI = boxRemoteAPI;
     }
 
     @Override
     public String name() {
-        return String.format("box-%s", boxFileSystem.getBoxRemoteAPI().getSessionName());
+
+        if (name == null) {
+            lock.lock();
+            try {
+                if (name == null) {
+                    name = String.format("box-%s", this.boxRemoteAPI.getSessionName());
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        return name;
     }
 
     @Override
@@ -47,17 +65,17 @@ public class BoxFileStore extends FileStore {
 
     @Override
     public long getTotalSpace() {
-        return this.boxFileSystem.getBoxRemoteAPI().getBoxUserInfo().getSpaceAmount();
+        return this.boxRemoteAPI.getBoxUserInfo().getSpaceAmount();
     }
 
     @Override
     public long getUsableSpace() {
-        return this.boxFileSystem.getBoxRemoteAPI().getBoxUserInfo().getSpaceAmount();
+        return this.boxRemoteAPI.getBoxUserInfo().getSpaceAmount();
     }
 
     @Override
     public long getUnallocatedSpace() {
-        var boxUserInfo = this.boxFileSystem.getBoxRemoteAPI().getBoxUserInfo();
+        var boxUserInfo = this.boxRemoteAPI.getBoxUserInfo();
         return boxUserInfo.getSpaceAmount() - boxUserInfo.getSpaceUsed();
     }
 

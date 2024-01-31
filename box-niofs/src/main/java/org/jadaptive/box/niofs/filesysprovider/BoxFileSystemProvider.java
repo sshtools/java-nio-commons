@@ -35,12 +35,16 @@ import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BoxFileSystemProvider extends FileSystemProvider {
 
 	private static final Logger logger = LoggerFactory.getLogger(BoxFileSystemProvider.class);
 
 	private volatile BoxFileSystem boxFileSystem;
+
+	private final Lock lock = new ReentrantLock();
 
 	@Override
 	public String getScheme() {
@@ -121,8 +125,9 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public FileStore getFileStore(Path path) throws IOException {
-		return new BoxFileStore(boxFileSystem);
+	public FileStore getFileStore(Path path) {
+		checkPath(path);
+		return ((BoxFileSystem) path.getFileSystem()).getBoxFileStore();
 	}
 
 	@Override

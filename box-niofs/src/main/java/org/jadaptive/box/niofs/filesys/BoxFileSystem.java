@@ -16,6 +16,7 @@
 package org.jadaptive.box.niofs.filesys;
 
 import org.jadaptive.box.niofs.api.BoxRemoteAPI;
+import org.jadaptive.box.niofs.filestore.BoxFileStore;
 import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
 import org.jadaptive.box.niofs.path.BoxPath;
 import org.jadaptive.box.niofs.path.BoxPathService;
@@ -40,13 +41,14 @@ public class BoxFileSystem extends BaseFileSystem {
 	private static final String SEPARATOR = "/";
 	private final BoxFileSystemProvider boxFileSystemProvider;
 	private final BoxRemoteAPI boxRemoteAPI;
+	private final BoxFileStore boxFileStore;
 
-	
 	public BoxFileSystem(BoxFileSystemProvider boxFileSystemProvider, BoxPathService boxPathService,
 						 BoxRemoteAPI boxRemoteAPI) {
 		super(boxPathService);
 		this.boxFileSystemProvider = boxFileSystemProvider;
 		this.boxRemoteAPI = boxRemoteAPI;
+		this.boxFileStore = new BoxFileStore(this.boxRemoteAPI);
 	}
 
 	@Override
@@ -55,9 +57,7 @@ public class BoxFileSystem extends BaseFileSystem {
 	}
 
 	@Override
-	public void close() throws IOException {
-		
-	}
+	public void close() {}
 
 	@Override
 	public boolean isOpen() {
@@ -81,8 +81,7 @@ public class BoxFileSystem extends BaseFileSystem {
 
 	@Override
 	public Iterable<FileStore> getFileStores() {
-		// TODO Auto-generated method stub
-		return null;
+		return List.of(this.boxFileStore);
 	}
 
 	@Override
@@ -144,5 +143,9 @@ public class BoxFileSystem extends BaseFileSystem {
 
 	public BoxRemoteAPI getBoxRemoteAPI() {
 		return boxRemoteAPI;
+	}
+
+	public BoxFileStore getBoxFileStore() {
+		return boxFileStore;
 	}
 }
