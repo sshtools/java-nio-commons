@@ -374,6 +374,22 @@ public class BoxFileSystemProviderTest {
         assertTrue(collectFiles.size() == 3);
     }
 
+    @Test
+    @DisplayName("It should return file store for box.")
+    void testShouldReturnBoxFileStore() throws URISyntaxException {
+        var provider = getNewBoxFileSystemProvider();
+        var path = provider.getPath(new URI("box:///"));
+
+        var fileStore = provider.getFileStore(path);
+
+        assertNotNull(fileStore);
+
+        assertNotNull(fileStore.name());
+        assertNotNull(fileStore.type());
+
+        assertFalse(fileStore.isReadOnly());
+    }
+
     private static BoxFileSystemProvider getNewBoxFileSystemProvider() {
         var boxRemoteAPI = BoxConnectionAPILocator.getBoxRemoteAPI();
         var pathService = new BoxPathService();
