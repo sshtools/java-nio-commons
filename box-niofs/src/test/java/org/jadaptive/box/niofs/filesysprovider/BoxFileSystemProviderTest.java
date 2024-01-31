@@ -8,6 +8,7 @@ import org.jadaptive.box.niofs.exception.BoxParentPathInvalidException;
 import org.jadaptive.box.niofs.filesys.BoxFileSystem;
 import org.jadaptive.box.niofs.path.BoxPath;
 import org.jadaptive.box.niofs.path.BoxPathService;
+import org.jadaptive.box.niofs.stream.NullFilter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,9 +17,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -318,6 +321,44 @@ public class BoxFileSystemProviderTest {
         assertFalse(provider.isSameFile(path1, path5));
     }
 
+    @Test
+    @DisplayName("It should return an iterator without any filter applied when none is provided.")
+    void testDirectoryStreamWithNoFilter() throws IOException {
+
+        var provider = getNewBoxFileSystemProvider();
+        var directory = provider.getPath(getPath("box:///test_box/filter"));
+
+        var collectFiles = new ArrayList<String>();
+
+        try (DirectoryStream<Path> stream = provider.newDirectoryStream(directory, NullFilter.INSTANCE)) {
+            for (Path p : stream) {
+                collectFiles.add(p.toString());
+            }
+        }
+
+        assertTrue(collectFiles.size() == 6);
+    }
+
+    @Test
+    @DisplayName("It should return an iterator with filter applied when one is provided.")
+    void testDirectoryStreamWithFilter() throws IOException {
+
+        var provider = getNewBoxFileSystemProvider();
+        var directory = provider.getPath(getPath("box:///test_box/filter"));
+
+        var collectFiles = new ArrayList<String>();
+
+        try (DirectoryStream<Path> stream = provider
+                .newDirectoryStream(directory, entry -> entry.getFileName().toString().endsWith("_pdf.txt"))
+        ) {
+            for (Path p : stream) {
+                collectFiles.add(p.toString());
+            }
+        }
+
+        assertTrue(collectFiles.size() == 3);
+    }
+
     private static BoxFileSystemProvider getNewBoxFileSystemProvider() {
         var boxRemoteAPI = BoxConnectionAPILocator.getBoxRemoteAPI();
         var pathService = new BoxPathService();
@@ -342,11 +383,30 @@ public class BoxFileSystemProviderTest {
 
         writeFileInBox(provider, "file_with_content.txt");
 
-        writeFileInBox(provider, "file_to_delete.txt");
+        var filter_path = provider.getPath(new URI("box:///test_box/filter"));
+
+        try {
+            provider.delete(filter_path);
+        } catch (BoxFileNotFoundException e) {}
+
+        provider.createDirectory(filter_path);
+
+        writeFileInBox(provider, "filter", "file_to_filter_1_doc.txt");
+        writeFileInBox(provider, "filter", "file_to_filter_2_doc.txt");
+        writeFileInBox(provider, "filter", "file_to_filter_3_doc.txt");
+
+        writeFileInBox(provider, "filter", "file_to_filter_1_pdf.txt");
+        writeFileInBox(provider, "filter", "file_to_filter_2_pdf.txt");
+        writeFileInBox(provider, "filter", "file_to_filter_3_pdf.txt");
     }
 
     private static void writeFileInBox(BoxFileSystemProvider provider, String fileName) throws URISyntaxException, IOException {
         var fileWithContentPath = provider.getPath(new URI(String.format("box:///test_box/%s", fileName)));
+        writeFileInBox(provider, fileWithContentPath, Path.of(String.format("src/test/resources/data/%s", fileName)));
+    }
+
+    private static void writeFileInBox(BoxFileSystemProvider provider, String directoryPrefix, String fileName) throws URISyntaxException, IOException {
+        var fileWithContentPath = provider.getPath(new URI(String.format("box:///test_box/%s/%s", directoryPrefix, fileName)));
         writeFileInBox(provider, fileWithContentPath, Path.of(String.format("src/test/resources/data/%s", fileName)));
     }
 
