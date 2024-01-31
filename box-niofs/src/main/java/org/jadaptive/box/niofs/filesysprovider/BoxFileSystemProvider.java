@@ -162,7 +162,8 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 
 	private void initBoxFileSystem() {
 		if (boxFileSystem == null) {
-			synchronized (BoxFileSystemProvider.class) {
+			try {
+				lock.lock();
 				if (boxFileSystem == null) {
 					logger.info("File system does not exists, creating new.");
 					var boxRemoteAPI = BoxConnectionAPILocator.getBoxRemoteAPI();
@@ -170,6 +171,8 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 					boxFileSystem = new BoxFileSystem(this, pathService, boxRemoteAPI);
 					pathService.setFileSystem(boxFileSystem);
 				}
+			} finally {
+				lock.unlock();
 			}
 		}
 	}
