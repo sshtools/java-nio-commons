@@ -15,15 +15,14 @@
  */
 package org.jadaptive.box.niofs.api;
 
-import com.box.sdk.BoxAPIConnection;
-import com.box.sdk.BoxFile;
-import com.box.sdk.BoxFolder;
-import com.box.sdk.BoxItem;
+import com.box.sdk.*;
+import org.jadaptive.box.niofs.api.auth.session.AbstractAuthenticatedSession;
 import org.jadaptive.box.niofs.api.auth.session.AuthenticatedSession;
 import org.jadaptive.box.niofs.api.channel.BoxSeekableByteChannel;
 import org.jadaptive.box.niofs.api.folder.BoxFolderTree;
 import org.jadaptive.box.niofs.api.folder.BoxResource;
 import org.jadaptive.box.niofs.api.folder.BoxResourceType;
+import org.jadaptive.box.niofs.api.user.BoxUserInfo;
 import org.jadaptive.box.niofs.exception.BoxFileAlreadyExistsFoundException;
 import org.jadaptive.box.niofs.exception.BoxFileNotFoundException;
 import org.jadaptive.box.niofs.exception.BoxNotADirectoryException;
@@ -277,6 +276,33 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
 
         var folder = new BoxFolder(api, resourceInBox.id);
         return new BoxDirectoryStream(folder, dir, filter);
+    }
+
+    @Override
+    public String getSessionName() {
+        return ((AbstractAuthenticatedSession) this.authenticatedSession).getName();
+    }
+
+    @Override
+    public String getCurrentUserId() {
+        return ((AbstractAuthenticatedSession) this.authenticatedSession).getId();
+    }
+
+    @Override
+    public BoxUserInfo getBoxUserInfo() {
+        var currentUserId = getCurrentUserId();
+
+        var api = getBoxAPIConnection();
+
+        var boxUser = new BoxUser(api,currentUserId);
+
+        var boxUserInfo = boxUser.getInfo("id", "name", "login", "space_amount", "space_used", "created_at");
+
+        var info = new BoxUserInfo(boxUserInfo.getID(), boxUserInfo.getName(),
+                boxUserInfo.getLogin(), boxUserInfo.getSpaceAmount(),
+                boxUserInfo.getSpaceUsed(), boxUserInfo.getCreatedAt());
+
+        return info;
     }
 
     private BoxAPIConnection getBoxAPIConnection() {

@@ -15,6 +15,7 @@
  */
 package org.jadaptive.box.niofs.api;
 
+import org.jadaptive.box.niofs.api.user.BoxUserInfo;
 import org.jadaptive.box.niofs.path.BoxPath;
 
 import java.io.FileNotFoundException;
@@ -44,4 +45,10 @@ public interface BoxRemoteAPI {
     BoxFileInfo getBoxFileInfo(BoxPath path);
 
     DirectoryStream<Path> newDirectoryStream(BoxPath dir, DirectoryStream.Filter<? super Path> filter);
+
+    String getSessionName();
+
+    String getCurrentUserId();
+
+    BoxUserInfo getBoxUserInfo();
 }

@@ -15,6 +15,7 @@
  */
 package org.jadaptive.box.niofs.api;
 
+import org.jadaptive.box.niofs.api.user.BoxUserInfo;
 import org.jadaptive.box.niofs.path.BoxPath;
 
 import java.nio.channels.SeekableByteChannel;
@@ -67,6 +68,21 @@ public class MockBoxRemoteAPI implements BoxRemoteAPI {
 
     @Override
     public DirectoryStream<Path> newDirectoryStream(BoxPath dir, DirectoryStream.Filter<? super Path> filter) {
+        return null;
+    }
+
+    @Override
+    public String getSessionName() {
+        return null;
+    }
+
+    @Override
+    public String getCurrentUserId() {
+        return null;
+    }
+
+    @Override
+    public BoxUserInfo getBoxUserInfo() {
         return null;
     }
 }
