@@ -26,8 +26,10 @@ import org.jadaptive.box.niofs.api.folder.BoxResource;
 import org.jadaptive.box.niofs.api.folder.BoxResourceType;
 import org.jadaptive.box.niofs.exception.BoxFileAlreadyExistsFoundException;
 import org.jadaptive.box.niofs.exception.BoxFileNotFoundException;
+import org.jadaptive.box.niofs.exception.BoxNotADirectoryException;
 import org.jadaptive.box.niofs.exception.BoxParentPathInvalidException;
 import org.jadaptive.box.niofs.path.BoxPath;
+import org.jadaptive.box.niofs.stream.BoxDirectoryStream;
 import org.jadaptive.niofs.attr.JadNioFileAttributes;
 import org.jadaptive.util.Pair;
 import org.slf4j.Logger;
@@ -35,9 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.file.CopyOption;
-import java.nio.file.LinkOption;
-import java.nio.file.OpenOption;
+import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
@@ -250,6 +250,33 @@ public abstract class BaseBoxRemoteAPI implements BoxRemoteAPI {
         }
 
         return new BoxFileInfo(name, id, parentResource.id, size);
+    }
+
+    @Override
+    public DirectoryStream<Path> newDirectoryStream(BoxPath dir, DirectoryStream.Filter<? super Path> filter) {
+
+        logger.info("The given path is {}", dir);
+
+        var normalizePath = getNormalizePath(dir);
+
+        logger.info("The path normalized as {}", dir);
+
+        var api = getBoxAPIConnection();
+
+        var pathNames = normalizePath.getNames();
+
+        var resourceInBox = BoxFolderTree.walk(pathNames, api);
+
+        if (resourceInBox instanceof BoxResource.NullBoxResource) {
+            throw new BoxParentPathInvalidException("Path is not present in remote account.");
+        }
+
+        if (resourceInBox.resourceType == BoxResourceType.File) {
+            throw new BoxNotADirectoryException(String.format("Resource path not a directory '%s' ", normalizePath));
+        }
+
+        var folder = new BoxFolder(api, resourceInBox.id);
+        return new BoxDirectoryStream(folder, dir, filter);
     }
 
     private BoxAPIConnection getBoxAPIConnection() {

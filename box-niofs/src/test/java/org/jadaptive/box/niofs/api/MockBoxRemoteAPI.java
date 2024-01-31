@@ -18,9 +18,7 @@ package org.jadaptive.box.niofs.api;
 import org.jadaptive.box.niofs.path.BoxPath;
 
 import java.nio.channels.SeekableByteChannel;
-import java.nio.file.CopyOption;
-import java.nio.file.LinkOption;
-import java.nio.file.OpenOption;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Map;
@@ -67,4 +65,8 @@ public class MockBoxRemoteAPI implements BoxRemoteAPI {
         return null;
     }
 
+    @Override
+    public DirectoryStream<Path> newDirectoryStream(BoxPath dir, DirectoryStream.Filter<? super Path> filter) {
+        return null;
+    }
 }

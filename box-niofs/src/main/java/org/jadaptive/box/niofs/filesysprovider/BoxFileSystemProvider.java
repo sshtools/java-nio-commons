@@ -32,7 +32,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.spi.FileSystemProvider;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -73,9 +72,9 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+	public DirectoryStream<Path> newDirectoryStream(Path dir, Filter<? super Path> filter) {
+		checkPath(dir);
+		return boxFileSystem.getBoxRemoteAPI().newDirectoryStream((BoxPath) dir, filter);
 	}
 
 	@Override
@@ -154,7 +153,6 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	@Override
 	public void setAttribute(Path path, String attribute, Object value, LinkOption... options) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	private void initBoxFileSystem() {
