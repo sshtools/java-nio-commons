@@ -34,7 +34,6 @@ public abstract class BasePath implements Path {
     protected final BasePathService basePathService;
 
     protected abstract boolean isSameInstance(Object path);
-    protected abstract BaseWatchService getWatchService();
 
     /**
      * Constructs a BasePath.
