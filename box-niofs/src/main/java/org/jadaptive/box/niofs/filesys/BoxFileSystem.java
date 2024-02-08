@@ -20,6 +20,7 @@ import org.jadaptive.box.niofs.filestore.BoxFileStore;
 import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
 import org.jadaptive.box.niofs.path.BoxPath;
 import org.jadaptive.box.niofs.path.BoxPathService;
+import org.jadaptive.box.niofs.watcher.BoxWatcherService;
 import org.jadaptive.niofs.filesys.BaseFileSystem;
 
 import java.io.IOException;
@@ -109,8 +110,7 @@ public class BoxFileSystem extends BaseFileSystem {
 
 	@Override
 	public WatchService newWatchService() throws IOException {
-		// TODO Auto-generated method stub
-		return null;
+		return new BoxWatcherService();
 	}
 
 	public List<String> getNamesForPath(String path) {
