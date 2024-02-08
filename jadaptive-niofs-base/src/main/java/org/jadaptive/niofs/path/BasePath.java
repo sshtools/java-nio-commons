@@ -15,6 +15,8 @@
  */
 package org.jadaptive.niofs.path;
 
+import org.jadaptive.niofs.watcher.BaseWatchService;
+
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,6 +34,7 @@ public abstract class BasePath implements Path {
     protected final BasePathService basePathService;
 
     protected abstract boolean isSameInstance(Object path);
+    protected abstract BaseWatchService getWatchService();
 
     /**
      * Constructs a BasePath.
@@ -372,4 +375,10 @@ public abstract class BasePath implements Path {
         Collections.reverse(copy);
         return copy;
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(names, root);
+    }
+
 }
