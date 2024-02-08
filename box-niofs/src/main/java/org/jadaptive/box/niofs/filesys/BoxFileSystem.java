@@ -87,8 +87,7 @@ public class BoxFileSystem extends BaseFileSystem {
 
 	@Override
 	public Set<String> supportedFileAttributeViews() {
-		// TODO Auto-generated method stub
-		return null;
+		return Set.of("basic");
 	}
 
 	@Override
