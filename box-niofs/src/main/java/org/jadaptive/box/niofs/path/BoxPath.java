@@ -17,8 +17,10 @@ package org.jadaptive.box.niofs.path;
 
 import org.jadaptive.box.niofs.filesys.BoxFileSystem;
 import org.jadaptive.niofs.path.BasePath;
+import org.jadaptive.niofs.watcher.BaseWatchService;
 
 import java.io.IOException;
+import java.nio.file.ProviderMismatchException;
 import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchEvent.Modifier;
 import java.nio.file.WatchKey;
@@ -38,7 +40,10 @@ public class BoxPath extends BasePath {
 
 	@Override
 	public WatchKey register(WatchService watcher, Kind<?>[] events, Modifier... modifiers) throws IOException {
-		throw new UnsupportedOperationException("TODO");
+		if (!(watcher instanceof BaseWatchService))
+			throw new ProviderMismatchException();
+
+		return ((BaseWatchService)watcher).register(this, events, modifiers);
 	}
 
 	@Override
