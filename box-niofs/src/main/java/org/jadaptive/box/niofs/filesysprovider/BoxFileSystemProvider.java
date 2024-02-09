@@ -17,7 +17,6 @@ package org.jadaptive.box.niofs.filesysprovider;
 
 import org.jadaptive.box.niofs.api.client.locator.BoxConnectionAPILocator;
 import org.jadaptive.box.niofs.attr.BoxNioFileAttributeView;
-import org.jadaptive.box.niofs.filestore.BoxFileStore;
 import org.jadaptive.box.niofs.filesys.BoxFileSystem;
 import org.jadaptive.box.niofs.path.BoxPath;
 import org.jadaptive.box.niofs.path.BoxPathService;

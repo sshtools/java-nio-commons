@@ -146,7 +146,7 @@ public class PollingWatchService extends BaseWatchService {
     }
 
     @Override
-    protected void implClose() throws IOException {
+    protected void implClose() {
         mapLock().lock();
         try {
             for (Map.Entry<Object, PollingWatchKey> entry: map.entrySet()) {

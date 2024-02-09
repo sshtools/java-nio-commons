@@ -15,8 +15,6 @@
  */
 package org.jadaptive.niofs.path;
 
-import org.jadaptive.niofs.watcher.BaseWatchService;
-
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
