@@ -1,0 +1,73 @@
+package org.jadaptive.box.niofs.setup;
+
+import org.jadaptive.box.niofs.api.DeveloperTokenRemoteAPI;
+import org.jadaptive.box.niofs.api.client.locator.BoxConnectionAPILocator;
+import org.jadaptive.box.niofs.filesys.BoxFileSystem;
+import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
+import org.jadaptive.box.niofs.path.BoxPath;
+import org.jadaptive.box.niofs.path.BoxPathService;
+
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
+
+public abstract class AbstractRemoteSetup {
+
+    private String token;
+
+    protected void init() throws Exception {
+        // this check is not thread safe (in case parallel threads for running tests)
+        token = Files.readString(Path.of("src/test/resources/config/dev_token"));
+        if (token == null || token.trim().isEmpty()) {
+            throw new IllegalStateException("Box Developer Token is null or empty.");
+        }
+
+        BoxConnectionAPILocator.setBoxRemoteAPI(new DeveloperTokenRemoteAPI(token));
+
+        setUpTestData();
+    }
+
+    protected void setUpTestData() throws Exception {}
+
+    protected void writeFileInBox(BoxFileSystemProvider provider, String fileName) throws URISyntaxException, IOException {
+        var fileWithContentPath = provider.getPath(new URI(String.format("box:///test_box/%s", fileName)));
+        writeFileInBox(provider, fileWithContentPath, Path.of(String.format("src/test/resources/data/%s", fileName)));
+    }
+
+    protected void writeFileInBox(BoxFileSystemProvider provider, String directoryPrefix, String fileName) throws URISyntaxException, IOException {
+        var fileWithContentPath = provider.getPath(new URI(String.format("box:///test_box/%s/%s", directoryPrefix, fileName)));
+        writeFileInBox(provider, fileWithContentPath, Path.of(String.format("src/test/resources/data/%s", fileName)));
+    }
+
+    protected void writeFileInBox(BoxFileSystemProvider provider, BoxPath fileToWrite, Path fileToRead) throws IOException {
+        var channel = provider.newByteChannel(fileToWrite, Set.of());
+
+        String s = Files.readString(fileToRead);
+        ByteBuffer bfSrc = ByteBuffer.wrap(s.getBytes());
+        channel.write(bfSrc);
+    }
+
+    protected URI getPath(String path) {
+        try {
+            return new URI(path);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
+    }
+
+    protected BoxFileSystemProvider getNewBoxFileSystemProvider() {
+        var boxRemoteAPI = BoxConnectionAPILocator.getBoxRemoteAPI();
+        var pathService = new BoxPathService();
+        var provider = new BoxFileSystemProvider();
+
+
+        var fs = new BoxFileSystem(provider, pathService, boxRemoteAPI);
+        pathService.setFileSystem(fs);
+
+        return provider;
+    }
+}

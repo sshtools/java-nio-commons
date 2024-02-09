@@ -15,46 +15,33 @@
  */
 package org.jadaptive.box.niofs.filesysprovider;
 
-import org.jadaptive.box.niofs.api.DeveloperTokenRemoteAPI;
-import org.jadaptive.box.niofs.api.client.locator.BoxConnectionAPILocator;
 import org.jadaptive.box.niofs.exception.BoxFileAlreadyExistsFoundException;
 import org.jadaptive.box.niofs.exception.BoxFileNotFoundException;
 import org.jadaptive.box.niofs.exception.BoxParentPathInvalidException;
-import org.jadaptive.box.niofs.filesys.BoxFileSystem;
-import org.jadaptive.box.niofs.path.BoxPath;
-import org.jadaptive.box.niofs.path.BoxPathService;
+import org.jadaptive.box.niofs.setup.AbstractRemoteSetup;
 import org.jadaptive.box.niofs.stream.NullFilter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
 import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class BoxFileSystemProviderTest {
 
-    private static String token;
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
     @BeforeAll
-    static void init() throws IOException, URISyntaxException {
-        token = Files.readString(Path.of("src/test/resources/config/dev_token"));
-        if (token == null || token.trim().isEmpty()) {
-            throw new IllegalStateException("Box Developer Token is null or empty.");
-        }
-
-        BoxConnectionAPILocator.setBoxRemoteAPI(new DeveloperTokenRemoteAPI(token));
-
-        setUpTestData();
+    void setup() throws Exception {
+        super.init();
     }
 
     @Test
@@ -390,19 +377,7 @@ public class BoxFileSystemProviderTest {
         assertFalse(fileStore.isReadOnly());
     }
 
-    private static BoxFileSystemProvider getNewBoxFileSystemProvider() {
-        var boxRemoteAPI = BoxConnectionAPILocator.getBoxRemoteAPI();
-        var pathService = new BoxPathService();
-        var provider = new BoxFileSystemProvider();
-
-
-        var fs = new BoxFileSystem(provider, pathService, boxRemoteAPI);
-        pathService.setFileSystem(fs);
-
-        return provider;
-    }
-
-    private static void setUpTestData() throws URISyntaxException, IOException {
+    public void setUpTestData() throws Exception {
         var provider = getNewBoxFileSystemProvider();
         var path = provider.getPath(new URI("box:///test_box"));
 
@@ -429,31 +404,5 @@ public class BoxFileSystemProviderTest {
         writeFileInBox(provider, "filter", "file_to_filter_1_pdf.txt");
         writeFileInBox(provider, "filter", "file_to_filter_2_pdf.txt");
         writeFileInBox(provider, "filter", "file_to_filter_3_pdf.txt");
-    }
-
-    private static void writeFileInBox(BoxFileSystemProvider provider, String fileName) throws URISyntaxException, IOException {
-        var fileWithContentPath = provider.getPath(new URI(String.format("box:///test_box/%s", fileName)));
-        writeFileInBox(provider, fileWithContentPath, Path.of(String.format("src/test/resources/data/%s", fileName)));
-    }
-
-    private static void writeFileInBox(BoxFileSystemProvider provider, String directoryPrefix, String fileName) throws URISyntaxException, IOException {
-        var fileWithContentPath = provider.getPath(new URI(String.format("box:///test_box/%s/%s", directoryPrefix, fileName)));
-        writeFileInBox(provider, fileWithContentPath, Path.of(String.format("src/test/resources/data/%s", fileName)));
-    }
-
-    private static void writeFileInBox(BoxFileSystemProvider provider, BoxPath fileToWrite, Path fileToRead) throws IOException {
-        var channel = provider.newByteChannel(fileToWrite, Set.of());
-
-        String s = Files.readString(fileToRead);
-        ByteBuffer bfSrc = ByteBuffer.wrap(s.getBytes());
-        channel.write(bfSrc);
-    }
-
-    private URI getPath(String path) {
-        try {
-            return new URI(path);
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(e.getMessage(), e);
-        }
     }
 }
