@@ -96,15 +96,14 @@ public class BoxFileSystem extends BaseFileSystem {
 	}
 
 	@Override
-	public PathMatcher getPathMatcher(String syntaxAndPattern) {
+	public UserPrincipalLookupService getUserPrincipalLookupService() {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public UserPrincipalLookupService getUserPrincipalLookupService() {
-		// TODO Auto-generated method stub
-		return null;
+	public PathMatcher getPathMatcher(String syntaxAndPattern) {
+		return getPathService().getPathMatcher(syntaxAndPattern);
 	}
 
 	@Override

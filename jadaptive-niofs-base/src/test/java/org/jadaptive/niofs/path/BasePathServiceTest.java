@@ -18,8 +18,7 @@ package org.jadaptive.niofs.path;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.*;
 
 public abstract class BasePathServiceTest {
 
@@ -144,5 +143,33 @@ public abstract class BasePathServiceTest {
         var separator = service.fileSystem.getSeparator();
         var expectedPath =   "path" + separator + "to" + separator + "file"; // => path/to/file
         assertEquals(expectedPath, service.getPath("", "path", separator + separator + "to", "file").toString());
+    }
+
+    @Test
+    @DisplayName("It should match the path matching to given pattern in glob format.")
+    void testPathMatcherShouldMatchThePathInGlobFormat() {
+        var service = getNewBasePathService();
+        var pathMatcher = service.getPathMatcher("glob:*.html");
+        var separator = service.fileSystem.getSeparator();
+
+        var expectedMatchPath =   service.getPath("", "path", separator + separator + "to", "index.html");
+        assertTrue( pathMatcher.matches(expectedMatchPath));
+
+        var expectedMismatchPath =   service.getPath("", "path", separator + separator + "to", "index.txt");
+        assertFalse( pathMatcher.matches(expectedMismatchPath));
+    }
+
+    @Test
+    @DisplayName("It should match the path matching to given pattern in regex format.")
+    void testPathMatcherShouldMatchThePathInRegexFormat() {
+        var service = getNewBasePathService();
+        var pathMatcher = service.getPathMatcher("regex:([^\\s]+(\\.(?i)(png|jpg))$)");
+        var separator = service.fileSystem.getSeparator();
+
+        var expectedMatchPath =   service.getPath("", "path", separator + separator + "to", "index.png");
+        assertTrue( pathMatcher.matches(expectedMatchPath));
+
+        var expectedMismatchPath =   service.getPath("", "path", separator + separator + "to", "index.txt");
+        assertFalse( pathMatcher.matches(expectedMismatchPath));
     }
 }
