@@ -75,7 +75,7 @@ public abstract class BaseWatchKey implements WatchKey {
     /**
      * Enqueues this key to the watch service
      */
-    final void signal() {
+    protected void signal() {
         lock.lock();
         try {
             if (state == State.READY) {
@@ -92,7 +92,7 @@ public abstract class BaseWatchKey implements WatchKey {
      * Adds the event to this key and signals it.
      */
     @SuppressWarnings("unchecked")
-    final void signalEvent(WatchEvent.Kind<?> kind, Object context) {
+    protected void signalEvent(WatchEvent.Kind<?> kind, Object context) {
         lock.lock();
         try {
 
