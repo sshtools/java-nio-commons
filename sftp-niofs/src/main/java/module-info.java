@@ -1,22 +1,17 @@
-/*
- *    _           _             _   _
- *   (_) __ _  __| | __ _ _ __ | |_(_)_   _____
- *   | |/ _` |/ _` |/ _` | '_ \| __| \ \ / / _ \
- *   | | (_| | (_| | (_| | |_) | |_| |\ V /  __/
- *  _/ |\__,_|\__,_|\__,_| .__/ \__|_| \_/ \___|
- * |__/                  |_|
+/**
+ *    Copyright 2013 Jadaptive Limited
  *
- * This file is part of the Maverick Synergy Hotfixes Java SSH API
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
  *
- * Unauthorized copying of this file, via any medium is strictly prohibited.
+ *        http://www.apache.org/licenses/LICENSE-2.0
  *
- * Copyright (C) 2002-2023 JADAPTIVE Limited - All Rights Reserved
- *
- * Use of this software may also be covered by third-party licenses depending on the choices you make about what features to use.
- *
- * Please visit the link below to see additional third-party licenses and copyrights
- *
- * https://www.jadaptive.com/app/manpage/en/article/1565029/What-third-party-dependencies-does-the-Maverick-Synergy-API-have
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
  */
 import java.nio.file.spi.FileSystemProvider;
 
