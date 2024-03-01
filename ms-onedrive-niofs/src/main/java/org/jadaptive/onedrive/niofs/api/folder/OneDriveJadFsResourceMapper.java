@@ -18,11 +18,7 @@ public class OneDriveJadFsResourceMapper implements JadFsResource.JadFsResourceM
     @Override
     public Iterator<JadFsResource> iterator(JadFsResource jadFsResource) {
 
-        var folder = new DriveItem();
-        folder.setId(jadFsResource.id);
-        folder.setName(jadFsResource.name);
-
-        Iterator<DriveItem> innerIterator = oneDriveRemoteAPICaller.getDriveItems(folder).iterator();
+        Iterator<DriveItem> innerIterator = oneDriveRemoteAPICaller.getDriveItems(jadFsResource).iterator();
         return new Iterator<>() {
 
             @Override

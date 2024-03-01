@@ -15,11 +15,10 @@
  */
 package org.jadaptive.onedrive.niofs.api;
 
-import com.microsoft.graph.models.Drive;
-import com.microsoft.graph.models.DriveItem;
-import com.microsoft.graph.models.Folder;
-import com.microsoft.graph.models.User;
+import com.microsoft.graph.drives.item.items.item.copy.CopyPostRequestBody;
+import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
+import org.jadaptive.api.folder.JadFsResource;
 
 import java.util.Collections;
 import java.util.List;
@@ -80,6 +79,14 @@ public class OneDriveRemoteAPICaller {
 
     }
 
+    public List<DriveItem> getDriveItems(JadFsResource parentResource) {
+        var parentDriveItem = new DriveItem();
+        parentDriveItem.setId(parentResource.id);
+        parentDriveItem.setName(parentResource.name);
+
+        return getDriveItems(parentDriveItem);
+    }
+
     public List<DriveItem> getDriveItems(DriveItem parent) {
 
         var driveId = this.drive.getId();
@@ -97,12 +104,12 @@ public class OneDriveRemoteAPICaller {
         return result == null ? Collections.emptyList() : result;
     }
 
-    public DriveItem createFolder(String folderName, DriveItem parentFolder) {
+    public DriveItem createFolder(String folderName, JadFsResource parentFolder) {
 
         Objects.requireNonNull(folderName,"Folder name cannot be null.");
 
         Objects.requireNonNull(parentFolder,"Parent folder cannot be null");
-        Objects.requireNonNull(parentFolder.getId(),"Parent folder Id cannot be null.");
+        Objects.requireNonNull(parentFolder.id,"Parent folder Id cannot be null.");
 
         var driveId = this.drive.getId();
 
@@ -113,23 +120,63 @@ public class OneDriveRemoteAPICaller {
 
         return graphServiceClient.drives()
                 .byDriveId(driveId).items()
-                .byDriveItemId(parentFolder.getId())
+                .byDriveItemId(parentFolder.id)
                 .children()
                 .post(driveItem);
     }
 
-    public void deleteDriveItem(DriveItem driveItem) {
+    public void delete(JadFsResource resource) {
 
-        Objects.requireNonNull(driveItem,"Drive item cannot be null");
-        Objects.requireNonNull(driveItem.getId(),"Drive item Id cannot be null.");
+        Objects.requireNonNull(resource,"Resource item cannot be null");
+        Objects.requireNonNull(resource.id,"Resource item Id cannot be null.");
 
         var driveId = this.drive.getId();
 
         graphServiceClient.drives()
                 .byDriveId(driveId)
                 .items()
-                .byDriveItemId(driveItem.getId())
+                .byDriveItemId(resource.id)
                 .delete();
+    }
+
+    public DriveItem copy(JadFsResource source, JadFsResource target) {
+
+        var driveId = this.drive.getId();
+
+        var parentReference = new ItemReference();
+        parentReference.setDriveId(driveId);
+        parentReference.setId(target.id);
+
+        var copyPostRequestBody = new CopyPostRequestBody();
+        copyPostRequestBody.setParentReference(parentReference);
+        copyPostRequestBody.setName(target.name);
+
+        return graphServiceClient.drives()
+                .byDriveId(driveId)
+                .items()
+                .byDriveItemId(source.id)
+                .copy()
+                .post(copyPostRequestBody);
+
+    }
+
+    public DriveItem move(JadFsResource source, JadFsResource target) {
+
+        var driveId = this.drive.getId();
+
+        ItemReference parentReference = new ItemReference();
+        parentReference.setId(target.id);
+
+        DriveItem driveItem = new DriveItem();
+        driveItem.setParentReference(parentReference);
+        driveItem.setName(target.name);
+
+        return graphServiceClient.drives()
+                .byDriveId(driveId)
+                .items()
+                .byDriveItemId(source.id)
+                .patch(driveItem);
+
     }
 
     private Optional<Drive> getDrive(Predicate<? super Drive> filter) {

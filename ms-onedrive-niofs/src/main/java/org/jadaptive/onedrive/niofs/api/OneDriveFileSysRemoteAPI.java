@@ -91,7 +91,13 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
 
     @Override
     public void copy(OneDrivePath source, OneDrivePath target, CopyOption... options) {
+        var targetName = target.getFileName().toString();
 
+        var pair = sourceTargetResources(oneDriveFolderTree, source, target);
+
+        var copied = new DriveItem();
+
+        logger.info("Folder copied '{}' with id '{}'", copied.getName(), copied.getId());
     }
 
     @Override
@@ -153,18 +159,14 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
         var current = normalizePath.getFileName();
         var folderNameToCreate = current.toString();
 
-        var parentDriveItem = new DriveItem();
-        parentDriveItem.setId(parentResource.id);
-        parentDriveItem.setName(parentResource.name);
-
         if (apiCaller
-                .getDriveItems(parentDriveItem)
+                .getDriveItems(parentResource)
                 .stream()
                 .anyMatch(driveItem -> driveItem.getName().equals(folderNameToCreate))) {
             throw new JadNioFsFileAlreadyExistsFoundException("Folder already exists");
         }
 
-        return apiCaller.createFolder(folderNameToCreate, parentDriveItem);
+        return apiCaller.createFolder(folderNameToCreate, parentResource);
     }
 
     private void deleteResource(JadFsResource resourceInOneDrive, OneDriveRemoteAPICaller apiCaller) {
@@ -172,10 +174,6 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
             throw new JadNioFsFileNotFoundException("Folder is not present in remote account.");
         }
 
-        var driveItem = new DriveItem();
-        driveItem.setId(resourceInOneDrive.id);
-        driveItem.setName(resourceInOneDrive.name);
-
-        apiCaller.deleteDriveItem(driveItem);
+        apiCaller.delete(resourceInOneDrive);
     }
 }
