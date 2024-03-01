@@ -18,6 +18,12 @@ package org.jadaptive.niofs.filesys;
 import org.jadaptive.niofs.path.BasePathService;
 
 import java.nio.file.FileSystem;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static java.util.Objects.requireNonNull;
 
 public abstract class BaseFileSystem extends FileSystem {
 
@@ -30,4 +36,22 @@ public abstract class BaseFileSystem extends FileSystem {
     public abstract BasePathService getPathService();
 
     public abstract String getRegExFriendlySeparator();
+
+    public List<String> getNamesForPath(String path) {
+        requireNonNull(path, "Path cannot be null");
+        // if we don't remove first separator split will return first value as empty string ""
+        // /get_started.pdf => "", "get_started.pdf"
+        if (path.startsWith(getPathService().getRootName())) {
+            path = path.substring(1);
+        }
+
+        // a blank path value when split on separator would end up in collection as the only value
+        // which is not desired, we need to return empty collection
+        // special case for "/", above starts with check will convert "/" => "" i,e, an empty string
+        if (path.isBlank()) {
+            return Collections.emptyList();
+        }
+
+        return Arrays.stream(path.split(getRegExFriendlySeparator())).collect(Collectors.toList());
+    }
 }
