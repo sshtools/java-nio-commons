@@ -15,7 +15,8 @@
  */
 package org.jadaptive.box.niofs.api.client.locator;
 
-import org.jadaptive.box.niofs.api.BoxRemoteAPI;
+import org.jadaptive.api.FileSystemRemoteAPI;
+import org.jadaptive.box.niofs.path.BoxPath;
 
 import java.util.Objects;
 
@@ -23,16 +24,16 @@ public class BoxConnectionAPILocator {
 
     private static final BoxConnectionAPILocator INSTANCE = new BoxConnectionAPILocator();
 
-    private BoxRemoteAPI boxRemoteAPI;
+    private FileSystemRemoteAPI<BoxPath> fileSystemRemoteAPI;
 
     private BoxConnectionAPILocator() {}
 
-    public static BoxRemoteAPI getBoxRemoteAPI() {
-        Objects.requireNonNull(INSTANCE.boxRemoteAPI, "Box Remote Api is not set.");
-        return INSTANCE.boxRemoteAPI;
+    public static FileSystemRemoteAPI<BoxPath> getBoxRemoteAPI() {
+        Objects.requireNonNull(INSTANCE.fileSystemRemoteAPI, "Box Remote Api is not set.");
+        return INSTANCE.fileSystemRemoteAPI;
     }
 
-    public static void setBoxRemoteAPI(BoxRemoteAPI boxRemoteAPI) {
-        INSTANCE.boxRemoteAPI = boxRemoteAPI;
+    public static void setBoxRemoteAPI(FileSystemRemoteAPI<BoxPath> boxRemoteAPI) {
+        INSTANCE.fileSystemRemoteAPI = boxRemoteAPI;
     }
 }

@@ -16,7 +16,7 @@
 package org.jadaptive.box.niofs.api.channel.write;
 
 import com.box.sdk.*;
-import org.jadaptive.box.niofs.api.BoxFileInfo;
+import org.jadaptive.api.file.FileSysFileInfo;
 import org.jadaptive.box.niofs.api.io.ChannelBufferWrapperInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,9 +36,9 @@ public class LargeFileSessionWrite implements FileWriteDelegate {
     private static final Logger logger = LoggerFactory.getLogger(LargeFileSessionWrite.class);
 
     private final BoxAPIConnection api;
-    private final BoxFileInfo fileInfo;
+    private final FileSysFileInfo fileInfo;
 
-    public LargeFileSessionWrite(BoxAPIConnection api, BoxFileInfo fileInfo) {
+    public LargeFileSessionWrite(BoxAPIConnection api, FileSysFileInfo fileInfo) {
         this.api = api;
         this.fileInfo = fileInfo;
     }

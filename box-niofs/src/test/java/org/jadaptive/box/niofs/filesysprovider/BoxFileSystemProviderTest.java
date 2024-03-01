@@ -15,11 +15,11 @@
  */
 package org.jadaptive.box.niofs.filesysprovider;
 
-import org.jadaptive.box.niofs.exception.BoxFileAlreadyExistsFoundException;
-import org.jadaptive.box.niofs.exception.BoxFileNotFoundException;
-import org.jadaptive.box.niofs.exception.BoxParentPathInvalidException;
 import org.jadaptive.box.niofs.setup.AbstractRemoteSetup;
 import org.jadaptive.box.niofs.stream.NullFilter;
+import org.jadaptive.niofs.exception.JadNioFsFileAlreadyExistsFoundException;
+import org.jadaptive.niofs.exception.JadNioFsFileNotFoundException;
+import org.jadaptive.niofs.exception.JadNioFsParentPathInvalidException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,7 +68,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         provider.createDirectory(path);
 
-        assertThrowsExactly(BoxFileAlreadyExistsFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileAlreadyExistsFoundException.class, () -> {
             provider.createDirectory(path);
         });
     }
@@ -80,7 +80,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         var path = provider.getPath(getPath("box:///test_box/parent_not_present/test_create_exists"));
 
-        assertThrowsExactly(BoxParentPathInvalidException.class, () -> {
+        assertThrowsExactly(JadNioFsParentPathInvalidException.class, () -> {
             provider.createDirectory(path);
         });
     }
@@ -101,7 +101,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         provider.delete(path);
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.readAttributes(path , BasicFileAttributes.class);
         });
 
@@ -114,7 +114,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         var path = provider.getPath(getPath("box:///test_box/test_delete_does_not_exists"));
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.delete(path);
         });
     }
@@ -136,7 +136,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         provider.delete(fileToDeletePath);
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.readAttributes(fileToDeletePath , BasicFileAttributes.class);
         });
     }
@@ -149,7 +149,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         var fileToDeletePath = provider.getPath(getPath("box:///test_box/test_delete_does_not_exists.txt"));
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.delete(fileToDeletePath);
         });
     }
@@ -194,7 +194,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         var destinationFile = provider.getPath(getPath("box:///test_box/copy_destination/file_to_copy.txt"));
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.copy(sourceFile, destinationFile);
         });
     }
@@ -216,7 +216,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
         var sourceFile = provider.getPath(getPath(sourcePath));
         var destinationFile = provider.getPath(getPath("box:///test_box/copy_destination_not_present/file_to_copy.txt"));
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.copy(sourceFile, destinationFile);
         });
     }
@@ -248,7 +248,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
         assertNotNull(attributes);
         assertTrue(attributes.isRegularFile());
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.readAttributes(sourceFile , BasicFileAttributes.class);
         });
     }
@@ -265,7 +265,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         var destinationFile = provider.getPath(getPath("box:///test_box/move_destination/file_to_copy.txt"));
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.move(sourceFile, destinationFile);
         });
     }
@@ -287,7 +287,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
         var sourceFile = provider.getPath(getPath(sourcePath));
         var destinationFile = provider.getPath(getPath("box:///test_box/move_destination_not_present/file_to_copy.txt"));
 
-        assertThrowsExactly(BoxFileNotFoundException.class, () -> {
+        assertThrowsExactly(JadNioFsFileNotFoundException.class, () -> {
             provider.move(sourceFile, destinationFile);
         });
     }
@@ -383,7 +383,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         try {
             provider.delete(path);
-        } catch (BoxFileNotFoundException e) {}
+        } catch (JadNioFsFileNotFoundException e) {}
 
         provider.createDirectory(path);
 
@@ -393,7 +393,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         try {
             provider.delete(filter_path);
-        } catch (BoxFileNotFoundException e) {}
+        } catch (JadNioFsFileNotFoundException e) {}
 
         provider.createDirectory(filter_path);
 

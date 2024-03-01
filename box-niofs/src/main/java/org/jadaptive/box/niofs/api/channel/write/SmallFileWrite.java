@@ -18,7 +18,7 @@ package org.jadaptive.box.niofs.api.channel.write;
 import com.box.sdk.BoxAPIConnection;
 import com.box.sdk.BoxFile;
 import com.box.sdk.BoxFolder;
-import org.jadaptive.box.niofs.api.BoxFileInfo;
+import org.jadaptive.api.file.FileSysFileInfo;
 import org.jadaptive.box.niofs.api.io.ChannelBufferWrapperInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,11 +30,11 @@ public class SmallFileWrite implements FileWriteDelegate {
     private static final Logger logger = LoggerFactory.getLogger(SmallFileWrite.class);
 
     private final BoxAPIConnection api;
-    private final BoxFileInfo fileInfo;
+    private final FileSysFileInfo fileInfo;
 
     private final BoxFile boxFile;
 
-    public SmallFileWrite(BoxAPIConnection api, BoxFileInfo fileInfo, BoxFile boxFile) {
+    public SmallFileWrite(BoxAPIConnection api, FileSysFileInfo fileInfo, BoxFile boxFile) {
         this.api = api;
         this.fileInfo = fileInfo;
         this.boxFile = boxFile;

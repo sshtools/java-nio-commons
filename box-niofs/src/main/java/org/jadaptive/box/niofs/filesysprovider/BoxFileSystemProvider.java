@@ -132,7 +132,7 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	@Override
 	public void checkAccess(Path path, AccessMode... modes) {
 		checkPath(path);
-		boxFileSystem.getBoxRemoteAPI().getBoxFileInfo((BoxPath) path);
+		boxFileSystem.getBoxRemoteAPI().getFileSysFileInfo((BoxPath) path);
 	}
 
 	@Override

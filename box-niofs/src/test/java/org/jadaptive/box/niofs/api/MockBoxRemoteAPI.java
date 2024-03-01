@@ -15,7 +15,9 @@
  */
 package org.jadaptive.box.niofs.api;
 
-import org.jadaptive.box.niofs.api.user.BoxUserInfo;
+import org.jadaptive.api.FileSystemRemoteAPI;
+import org.jadaptive.api.file.FileSysFileInfo;
+import org.jadaptive.api.user.FileSysUserInfo;
 import org.jadaptive.box.niofs.path.BoxPath;
 
 import java.nio.channels.SeekableByteChannel;
@@ -25,7 +27,7 @@ import java.nio.file.attribute.FileAttribute;
 import java.util.Map;
 import java.util.Set;
 
-public class MockBoxRemoteAPI implements BoxRemoteAPI {
+public class MockBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
     @Override
     public void createDirectory(BoxPath dir, FileAttribute<?>... attrs) {
 
@@ -62,7 +64,7 @@ public class MockBoxRemoteAPI implements BoxRemoteAPI {
     }
 
     @Override
-    public BoxFileInfo getBoxFileInfo(BoxPath path) {
+    public FileSysFileInfo getFileSysFileInfo(BoxPath path) {
         return null;
     }
 
@@ -82,7 +84,7 @@ public class MockBoxRemoteAPI implements BoxRemoteAPI {
     }
 
     @Override
-    public BoxUserInfo getBoxUserInfo() {
+    public FileSysUserInfo getFileSysUserInfo() {
         return null;
     }
 }

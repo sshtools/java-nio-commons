@@ -17,7 +17,7 @@ package org.jadaptive.box.niofs.api.channel;
 
 import com.box.sdk.BoxAPIConnection;
 import com.box.sdk.BoxFile;
-import org.jadaptive.box.niofs.api.BoxFileInfo;
+import org.jadaptive.api.file.FileSysFileInfo;
 import org.jadaptive.box.niofs.api.channel.write.LargeFileSessionWrite;
 import org.jadaptive.box.niofs.api.channel.write.SmallFileWrite;
 import org.jadaptive.box.niofs.api.channel.write.WriteInfo;
@@ -38,12 +38,12 @@ public class BoxSeekableByteChannel implements SeekableByteChannel {
 
     private BoxFile boxFile;
     private final BoxAPIConnection api;
-    private BoxFileInfo boxFileInfo;
+    private FileSysFileInfo boxFileInfo;
     private long position;
     private final Lock lock = new ReentrantLock();
 
 
-    private BoxSeekableByteChannel(BoxAPIConnection api, BoxFileInfo boxFileInfo) {
+    private BoxSeekableByteChannel(BoxAPIConnection api, FileSysFileInfo boxFileInfo) {
         this.api = api;
         this.boxFileInfo = boxFileInfo;
         if (this.boxFileInfo.isPresent()) {
@@ -52,16 +52,16 @@ public class BoxSeekableByteChannel implements SeekableByteChannel {
         this.position = 0;
     }
 
-    private BoxSeekableByteChannel(BoxAPIConnection api, BoxFileInfo boxFileInfo, long position) {
+    private BoxSeekableByteChannel(BoxAPIConnection api, FileSysFileInfo boxFileInfo, long position) {
         this(api, boxFileInfo);
         this.position = position;
     }
 
-    public static SeekableByteChannel getBoxFileChannel(BoxFileInfo boxFileInfo, BoxAPIConnection api) {
+    public static SeekableByteChannel getBoxFileChannel(FileSysFileInfo boxFileInfo, BoxAPIConnection api) {
         return new BoxSeekableByteChannel(api, boxFileInfo);
     }
 
-    public static SeekableByteChannel getBoxFileChannel(BoxFileInfo boxFileInfo, BoxAPIConnection api, long position) {
+    public static SeekableByteChannel getBoxFileChannel(FileSysFileInfo boxFileInfo, BoxAPIConnection api, long position) {
         return new BoxSeekableByteChannel(api, boxFileInfo, position);
     }
 
@@ -133,7 +133,7 @@ public class BoxSeekableByteChannel implements SeekableByteChannel {
 
             var info = writeInfo.getFileInfo();
 
-            this.boxFileInfo = new BoxFileInfo(info.getName(), info.getID(), parentId, info.getSize());
+            this.boxFileInfo = new FileSysFileInfo(info.getName(), info.getID(), parentId, info.getSize());
             this.boxFile = new BoxFile(api, info.getID());
             this.position = info.getSize();
 

@@ -15,7 +15,7 @@
  */
 package org.jadaptive.box.niofs.attr;
 
-import org.jadaptive.box.niofs.api.BoxRemoteAPI;
+import org.jadaptive.api.FileSystemRemoteAPI;
 import org.jadaptive.box.niofs.path.BoxPath;
 
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -24,11 +24,11 @@ import java.nio.file.attribute.FileTime;
 
 public class BoxNioFileAttributeView implements BasicFileAttributeView {
 
-    private final BoxRemoteAPI boxRemoteAPI;
+    private final FileSystemRemoteAPI<BoxPath> boxRemoteAPI;
 
     private final BoxPath path;
 
-    public BoxNioFileAttributeView(BoxRemoteAPI boxRemoteAPI, BoxPath path) {
+    public BoxNioFileAttributeView(FileSystemRemoteAPI<BoxPath> boxRemoteAPI, BoxPath path) {
         this.boxRemoteAPI = boxRemoteAPI;
         this.path = path;
     }

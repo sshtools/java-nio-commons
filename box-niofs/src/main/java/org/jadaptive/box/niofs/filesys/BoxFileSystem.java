@@ -15,7 +15,7 @@
  */
 package org.jadaptive.box.niofs.filesys;
 
-import org.jadaptive.box.niofs.api.BoxRemoteAPI;
+import org.jadaptive.api.FileSystemRemoteAPI;
 import org.jadaptive.box.niofs.filestore.BoxFileStore;
 import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
 import org.jadaptive.box.niofs.path.BoxPath;
@@ -29,11 +29,8 @@ import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.UserPrincipalLookupService;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -41,11 +38,11 @@ public class BoxFileSystem extends BaseFileSystem {
 	
 	private static final String SEPARATOR = "/";
 	private final BoxFileSystemProvider boxFileSystemProvider;
-	private final BoxRemoteAPI boxRemoteAPI;
+	private final FileSystemRemoteAPI<BoxPath> boxRemoteAPI;
 	private final BoxFileStore boxFileStore;
 
 	public BoxFileSystem(BoxFileSystemProvider boxFileSystemProvider, BoxPathService boxPathService,
-						 BoxRemoteAPI boxRemoteAPI) {
+						 FileSystemRemoteAPI<BoxPath> boxRemoteAPI) {
 		super(boxPathService);
 		this.boxFileSystemProvider = boxFileSystemProvider;
 		this.boxRemoteAPI = boxRemoteAPI;
@@ -111,24 +108,6 @@ public class BoxFileSystem extends BaseFileSystem {
 		return new BoxWatcherService();
 	}
 
-	public List<String> getNamesForPath(String path) {
-		requireNonNull(path, "Path cannot be null");
-		// if we don't remove first separator split will return first value as empty string ""
-		// /get_started.pdf => "", "get_started.pdf"
-		if (path.startsWith(getPathService().getRootName())) {
-			path = path.substring(1);
-		}
-
-		// a blank path value when split on separator would end up in collection as the only value
-		// which is not desired, we need to return empty collection
-		// special case for "/", above starts with check will convert "/" => "" i,e, an empty string
-		if (path.isBlank()) {
-			return Collections.emptyList();
-		}
-
-		return Arrays.stream(path.split(getRegExFriendlySeparator())).collect(Collectors.toList());
-	}
-
 	@Override
 	public BoxPathService getPathService() {
 		return (BoxPathService) this.basePathService;
@@ -139,7 +118,7 @@ public class BoxFileSystem extends BaseFileSystem {
 		return SEPARATOR;
 	}
 
-	public BoxRemoteAPI getBoxRemoteAPI() {
+	public FileSystemRemoteAPI<BoxPath> getBoxRemoteAPI() {
 		return boxRemoteAPI;
 	}
 

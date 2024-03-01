@@ -16,41 +16,47 @@
 package org.jadaptive.box.niofs.api.folder;
 
 import com.box.sdk.BoxAPIConnection;
-import com.box.sdk.BoxFile;
 import com.box.sdk.BoxFolder;
 import com.box.sdk.BoxItem;
+import org.jadaptive.api.folder.JadFsResource;
+import org.jadaptive.api.folder.JadFsResourceFolderTree;
+import org.jadaptive.api.folder.JadFsResourceType;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 public class BoxFolderTree {
 
-    public static BoxResource walk(Collection<String> pathToCheck, BoxAPIConnection api) {
-        var rootFolder = BoxFolder.getRootFolder(api);
-        return walk(pathToCheck.toArray(new String[0]), 0, rootFolder, "ROOT", api);
-    }
+    public static JadFsResource walk(Collection<String> pathToCheck, BoxAPIConnection api) {
+        return JadFsResourceFolderTree.walk(pathToCheck, new JadFsResource.JadFsResourceChildrenFetcher() {
+            @Override
+            public Iterable<JadFsResource> children(JadFsResource jadFsResource) {
+                var folder = new BoxFolder(api, jadFsResource.id);
+                return () -> {
 
-    private static BoxResource walk(String[] pathToCheck, int index, BoxFolder current, String name,
-                                    BoxAPIConnection api) {
-        // all paths matched all exists return true
-        if (index == pathToCheck.length) {
-            return new BoxResource(current.getID(), name, BoxResourceType.Folder);
-        }
+                    Iterator<BoxItem.Info> innerIterator = folder.iterator();
+                    return new Iterator<JadFsResource>() {
+                        @Override
+                        public boolean hasNext() {
+                            return innerIterator.hasNext();
+                        }
 
-        for (BoxItem.Info itemInfo : current) {
-            if (itemInfo instanceof BoxFolder.Info) {
-                var folderName = itemInfo.getName();
-                if (folderName.equals(pathToCheck[index])) {
-                    var latest = new BoxFolder(api, itemInfo.getID());
-                    return walk(pathToCheck, ++index, latest, folderName, api);
-                }
-            } else if (index == (pathToCheck.length - 1) && itemInfo instanceof BoxFile.Info) {
-                var fileName = itemInfo.getName();
-                if (fileName.equals(pathToCheck[index])) {
-                    return new BoxResource(itemInfo.getID(), itemInfo.getName(), BoxResourceType.File);
-                }
+                        @Override
+                        public JadFsResource next() {
+                            var info = innerIterator.next();
+                            var resourceType = info instanceof BoxFolder.Info ? JadFsResourceType.Folder :
+                                    JadFsResourceType.File;
+                            return new JadFsResource(info.getID(), info.getName(), resourceType);
+                        }
+                    };
+                };
             }
-        }
 
-        return BoxResource.NULL_BOX_RESOURCE;
+            @Override
+            public JadFsResource root() {
+                var rootFolder = BoxFolder.getRootFolder(api);
+                return new JadFsResource(rootFolder.getID(),"ROOT", JadFsResourceType.Folder);
+            }
+        });
     }
 }

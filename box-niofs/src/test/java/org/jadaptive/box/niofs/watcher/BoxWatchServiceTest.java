@@ -15,9 +15,9 @@
  */
 package org.jadaptive.box.niofs.watcher;
 
-import org.jadaptive.box.niofs.exception.BoxFileNotFoundException;
 import org.jadaptive.box.niofs.filesysprovider.BoxFileSystemProvider;
 import org.jadaptive.box.niofs.setup.AbstractRemoteSetup;
+import org.jadaptive.niofs.exception.JadNioFsFileNotFoundException;
 import org.jadaptive.niofs.path.BasePath;
 import org.junit.jupiter.api.*;
 
@@ -231,7 +231,7 @@ public class BoxWatchServiceTest extends AbstractRemoteSetup {
 
         try {
             provider.delete(path);
-        } catch (BoxFileNotFoundException e) {}
+        } catch (JadNioFsFileNotFoundException e) {}
 
         provider.createDirectory(path);
     }

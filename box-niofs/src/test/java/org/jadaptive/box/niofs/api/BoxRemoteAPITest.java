@@ -42,7 +42,7 @@ public class BoxRemoteAPITest {
     void testUserInfo() {
         var api = new DeveloperTokenRemoteAPI(token);
 
-        var boxUserInfo = api.getBoxUserInfo();
+        var boxUserInfo = api.getFileSysUserInfo();
 
         assertNotNull(boxUserInfo);
         assertNotNull(boxUserInfo.getId());

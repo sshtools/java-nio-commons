@@ -15,7 +15,8 @@
  */
 package org.jadaptive.box.niofs.filestore;
 
-import org.jadaptive.box.niofs.api.BoxRemoteAPI;
+import org.jadaptive.api.FileSystemRemoteAPI;
+import org.jadaptive.box.niofs.path.BoxPath;
 
 import java.nio.file.FileStore;
 import java.nio.file.attribute.BasicFileAttributeView;
@@ -26,13 +27,13 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class BoxFileStore extends FileStore {
 
-    private final BoxRemoteAPI boxRemoteAPI;
+    private final FileSystemRemoteAPI<BoxPath> boxRemoteAPI;
 
     private volatile String name;
 
     private final Lock lock = new ReentrantLock();
 
-    public BoxFileStore(BoxRemoteAPI boxRemoteAPI) {
+    public BoxFileStore(FileSystemRemoteAPI<BoxPath> boxRemoteAPI) {
         this.boxRemoteAPI = boxRemoteAPI;
     }
 
@@ -65,17 +66,17 @@ public class BoxFileStore extends FileStore {
 
     @Override
     public long getTotalSpace() {
-        return this.boxRemoteAPI.getBoxUserInfo().getSpaceAmount();
+        return this.boxRemoteAPI.getFileSysUserInfo().getSpaceAmount();
     }
 
     @Override
     public long getUsableSpace() {
-        return this.boxRemoteAPI.getBoxUserInfo().getSpaceAmount();
+        return this.boxRemoteAPI.getFileSysUserInfo().getSpaceAmount();
     }
 
     @Override
     public long getUnallocatedSpace() {
-        var boxUserInfo = this.boxRemoteAPI.getBoxUserInfo();
+        var boxUserInfo = this.boxRemoteAPI.getFileSysUserInfo();
         return boxUserInfo.getSpaceAmount() - boxUserInfo.getSpaceUsed();
     }
 
