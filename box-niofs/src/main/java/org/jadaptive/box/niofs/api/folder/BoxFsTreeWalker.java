@@ -13,12 +13,22 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package org.jadaptive.box.niofs.api;
+package org.jadaptive.box.niofs.api.folder;
 
-import org.jadaptive.box.niofs.api.auth.session.strategy.DeveloperTokenAuthenticatedSession;
+import org.jadaptive.api.folder.AbstractJadFsTreeWalker;
+import org.jadaptive.api.folder.JadFsResource;
 
-public class DeveloperTokenRemoteAPI extends BaseBoxRemoteAPI {
-    public DeveloperTokenRemoteAPI(String token) {
-        super(new DeveloperTokenAuthenticatedSession(token));
+public class BoxFsTreeWalker extends AbstractJadFsTreeWalker {
+
+    private final BoxJadFsResourceMapper mapper;
+
+    public BoxFsTreeWalker(BoxJadFsResourceMapper mapper) {
+        this.mapper = mapper;
     }
+
+    @Override
+    protected JadFsResource.JadFsResourceMapper getMapper() {
+        return this.mapper;
+    }
+
 }

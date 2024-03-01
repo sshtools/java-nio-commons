@@ -23,7 +23,8 @@ import org.jadaptive.api.user.FileSysUserInfo;
 import org.jadaptive.niofs.exception.JadNioFsFileAlreadyExistsFoundException;
 import org.jadaptive.niofs.exception.JadNioFsFileNotFoundException;
 import org.jadaptive.niofs.exception.JadNioFsParentPathInvalidException;
-import org.jadaptive.onedrive.niofs.api.folder.OneDriveFolderTree;
+import org.jadaptive.onedrive.niofs.api.folder.OneDriveFsTreeWalker;
+import org.jadaptive.onedrive.niofs.api.folder.OneDriveJadFsResourceMapper;
 import org.jadaptive.onedrive.niofs.path.OneDrivePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +44,12 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
 
     private final OneDriveRemoteAPICaller apiCaller;
 
+    private final JadFsResource.JadFsTreeWalker oneDriveFolderTree;
+
+
     public OneDriveFileSysRemoteAPI(OneDriveRemoteAPICaller apiCaller) {
         this.apiCaller = apiCaller;
+        oneDriveFolderTree = new OneDriveFsTreeWalker(new OneDriveJadFsResourceMapper(this.apiCaller));
     }
 
     @Override
@@ -59,7 +64,7 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
         var parent = normalizePath.getParent();
         var pathNames = parent.getNames();
 
-        var parentResourceInOneDrive = OneDriveFolderTree.walk(pathNames, apiCaller);
+        var parentResourceInOneDrive = oneDriveFolderTree.walk(pathNames);
 
         var created = createFolderResource(parentResourceInOneDrive, (OneDrivePath) normalizePath, apiCaller);
 
@@ -77,7 +82,7 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
 
         logger.info("The path normalized as {}", normalizePath);
 
-        var resourceInOneDrive = OneDriveFolderTree.walk(pathNames, apiCaller);
+        var resourceInOneDrive = oneDriveFolderTree.walk(pathNames);
 
         deleteResource(resourceInOneDrive, apiCaller);
 
@@ -132,6 +137,11 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
     @Override
     public FileSysUserInfo getFileSysUserInfo() {
         return null;
+    }
+
+    @Override
+    public void log_info(String format, Object... arguments) {
+        logger.info(format,arguments);
     }
 
     private static DriveItem createFolderResource(JadFsResource parentResource, OneDrivePath normalizePath,

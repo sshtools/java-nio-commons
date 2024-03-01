@@ -24,7 +24,8 @@ import org.jadaptive.api.user.FileSysUserInfo;
 import org.jadaptive.box.niofs.api.auth.session.AbstractAuthenticatedSession;
 import org.jadaptive.box.niofs.api.auth.session.AuthenticatedSession;
 import org.jadaptive.box.niofs.api.channel.BoxSeekableByteChannel;
-import org.jadaptive.box.niofs.api.folder.BoxFolderTree;
+import org.jadaptive.box.niofs.api.folder.BoxFsTreeWalker;
+import org.jadaptive.box.niofs.api.folder.BoxJadFsResourceMapper;
 import org.jadaptive.box.niofs.path.BoxPath;
 import org.jadaptive.box.niofs.stream.BoxDirectoryStream;
 import org.jadaptive.niofs.attr.JadNioFileAttributes;
@@ -32,7 +33,6 @@ import org.jadaptive.niofs.exception.JadNioFsFileAlreadyExistsFoundException;
 import org.jadaptive.niofs.exception.JadNioFsFileNotFoundException;
 import org.jadaptive.niofs.exception.JadNioFsNotADirectoryException;
 import org.jadaptive.niofs.exception.JadNioFsParentPathInvalidException;
-import org.jadaptive.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,8 +51,11 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
 
     protected final AuthenticatedSession authenticatedSession;
 
+    private final JadFsResource.JadFsTreeWalker boxFsTreeWalker;
+
     public BaseBoxRemoteAPI(AuthenticatedSession authenticatedSession) {
         this.authenticatedSession = authenticatedSession;
+        boxFsTreeWalker = new BoxFsTreeWalker(new BoxJadFsResourceMapper(getBoxAPIConnection()));
     }
 
     protected AuthenticatedSession getAuthenticatedSession() {
@@ -73,7 +76,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
         var parent = normalizePath.getParent();
         var pathNames = parent.getNames();
 
-        var parentResourceInBox = BoxFolderTree.walk(pathNames, api);
+        var parentResourceInBox = boxFsTreeWalker.walk(pathNames);
 
         var created = createFolderResource(parentResourceInBox, (BoxPath) normalizePath, api);
 
@@ -93,7 +96,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
 
         var api = getBoxAPIConnection();
 
-        var resourceInBox = BoxFolderTree.walk(pathNames, api);
+        var resourceInBox = boxFsTreeWalker.walk(pathNames);
 
         deleteResource(resourceInBox, api);
 
@@ -105,7 +108,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
 
         var targetName = target.getFileName().toString();
 
-        var pair = sourceTargetResources(source,target);
+        var pair = sourceTargetResources(boxFsTreeWalker, source, target);
 
         var api = getBoxAPIConnection();
 
@@ -120,7 +123,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
 
         var targetName = target.getFileName().toString();
 
-        var pair = sourceTargetResources(source,target);
+        var pair = sourceTargetResources(boxFsTreeWalker, source, target);
 
         var api = getBoxAPIConnection();
 
@@ -144,7 +147,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
         var parent = normalizePath.getParent();
         var pathNames = parent.getNames();
 
-        var resource = BoxFolderTree.walk(pathNames, api);
+        var resource = boxFsTreeWalker.walk(pathNames);
 
         if (resource instanceof JadFsResource.NullJadFsResource) {
             throw new JadNioFsParentPathInvalidException("Parent path is not present in remote account.");
@@ -207,6 +210,11 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
     }
 
     @Override
+    public void log_info(String format, Object... arguments) {
+        logger.info(format,arguments);
+    }
+
+    @Override
     public FileSysFileInfo getFileSysFileInfo(BoxPath path) {
 
         logger.info("The given path is {}", path);
@@ -224,7 +232,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
         var parent = normalizePath.getParent();
         var pathNames = parent.getNames();
 
-        var parentResource = BoxFolderTree.walk(pathNames, api);
+        var parentResource = boxFsTreeWalker.walk(pathNames);
 
         if (parentResource instanceof JadFsResource.NullJadFsResource) {
             throw new JadNioFsParentPathInvalidException("Parent path is not present in remote account.");
@@ -267,7 +275,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
 
         var pathNames = normalizePath.getNames();
 
-        var resourceInBox = BoxFolderTree.walk(pathNames, api);
+        var resourceInBox = boxFsTreeWalker.walk(pathNames);
 
         if (resourceInBox instanceof JadFsResource.NullJadFsResource) {
             throw new JadNioFsParentPathInvalidException("Path is not present in remote account.");
@@ -311,38 +319,6 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
     private BoxAPIConnection getBoxAPIConnection() {
         var session = getAuthenticatedSession();
         return session.getBoxAPIConnection();
-    }
-
-    private Pair<JadFsResource> sourceTargetResources(BoxPath source, BoxPath target) {
-
-        logger.info("The given source path is {}", source);
-        var normalizeSourcePath = getNormalizePath(source);
-        var sourcePathNames = normalizeSourcePath.getNames();
-
-        logger.info("The source path normalized as {}", normalizeSourcePath);
-
-        logger.info("The given target path is {}", target);
-        var normalizeTargetPath = getNormalizePath(target);
-        var targetPathNames = normalizeTargetPath.getNames();
-
-        var api = getBoxAPIConnection();
-
-        var targetResourceInBox  = BoxFolderTree.walk(targetPathNames, api);
-
-        if (targetResourceInBox instanceof JadFsResource.NullJadFsResource
-                || targetResourceInBox.resourceType == JadFsResourceType.File.File) {
-
-            var parent = normalizeTargetPath.getParent();
-            var parentPathNames = parent.getNames();
-
-            logger.info("Checking for parent path for target {}", parent);
-
-            targetResourceInBox = BoxFolderTree.walk(parentPathNames, api);
-        }
-
-        var sourceResourceInBox = BoxFolderTree.walk(sourcePathNames, api);
-
-        return new Pair<>(sourceResourceInBox, targetResourceInBox);
     }
 
     private static JadNioFileAttributes setUpJadNioFileAttributes(BoxItem.Info item) {

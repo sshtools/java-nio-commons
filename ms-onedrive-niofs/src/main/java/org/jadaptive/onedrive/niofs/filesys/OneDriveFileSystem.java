@@ -17,8 +17,8 @@ package org.jadaptive.onedrive.niofs.filesys;
 
 import org.jadaptive.api.FileSystemRemoteAPI;
 import org.jadaptive.niofs.filesys.BaseFileSystem;
-import org.jadaptive.onedrive.niofs.filesysprovider.OneDriveFileSystemProvider;
 import org.jadaptive.onedrive.niofs.filestore.OneDriveFileStore;
+import org.jadaptive.onedrive.niofs.filesysprovider.OneDriveFileSystemProvider;
 import org.jadaptive.onedrive.niofs.path.OneDrivePath;
 import org.jadaptive.onedrive.niofs.path.OneDrivePathService;
 import org.jetbrains.annotations.NotNull;

@@ -13,12 +13,21 @@
  *    See the License for the specific language governing permissions and
  *    limitations under the License.
  */
-package org.jadaptive.box.niofs.api;
+package org.jadaptive.onedrive.niofs.api.folder;
 
-import org.jadaptive.box.niofs.api.auth.session.strategy.DeveloperTokenAuthenticatedSession;
+import org.jadaptive.api.folder.AbstractJadFsTreeWalker;
+import org.jadaptive.api.folder.JadFsResource;
 
-public class DeveloperTokenRemoteAPI extends BaseBoxRemoteAPI {
-    public DeveloperTokenRemoteAPI(String token) {
-        super(new DeveloperTokenAuthenticatedSession(token));
+public class OneDriveFsTreeWalker extends AbstractJadFsTreeWalker {
+
+    private final OneDriveJadFsResourceMapper mapper;
+
+    public OneDriveFsTreeWalker(OneDriveJadFsResourceMapper mapper) {
+        this.mapper = mapper;
+    }
+
+    @Override
+    protected JadFsResource.JadFsResourceMapper getMapper() {
+        return this.mapper;
     }
 }

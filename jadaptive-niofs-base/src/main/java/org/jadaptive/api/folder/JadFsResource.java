@@ -15,6 +15,9 @@
  */
 package org.jadaptive.api.folder;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 public class JadFsResource {
 
     public static final NullJadFsResource NULL_JAD_FS_RESOURCE = new NullJadFsResource();
@@ -50,5 +53,15 @@ public class JadFsResource {
         Iterable<JadFsResource> children(JadFsResource jadFsResource);
 
         JadFsResource root();
+    }
+
+    public interface JadFsResourceMapper {
+        Iterator<JadFsResource> iterator(JadFsResource jadFsResource);
+
+        JadFsResource root();
+    }
+
+    public interface JadFsTreeWalker {
+        JadFsResource walk(Collection<String> pathToCheck);
     }
 }

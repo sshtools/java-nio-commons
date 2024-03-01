@@ -16,9 +16,12 @@
 package org.jadaptive.api;
 
 import org.jadaptive.api.file.FileSysFileInfo;
+import org.jadaptive.api.folder.JadFsResource;
+import org.jadaptive.api.folder.JadFsResourceType;
 import org.jadaptive.api.user.FileSysUserInfo;
 import org.jadaptive.niofs.filesys.BaseFileSystem;
 import org.jadaptive.niofs.path.BasePath;
+import org.jadaptive.util.Pair;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -57,6 +60,8 @@ public interface FileSystemRemoteAPI<P> {
 
     FileSysUserInfo getFileSysUserInfo();
 
+    void log_info(String format, Object... arguments);
+
     default BasePath getNormalizePath(BasePath dir) {
         BasePath normalizePath;
         if (dir.isAbsolute()) {
@@ -93,4 +98,36 @@ public interface FileSystemRemoteAPI<P> {
 
         return (BasePath) mergedPath.normalize();
     }
+
+    default Pair<JadFsResource> sourceTargetResources(JadFsResource.JadFsTreeWalker jadFsTreeWalker,
+                                                      BasePath source, BasePath target) {
+
+        log_info("The given source path is {}", source);
+        var normalizeSourcePath = getNormalizePath(source);
+        var sourcePathNames = normalizeSourcePath.getNames();
+
+        log_info("The source path normalized as {}", normalizeSourcePath);
+
+        log_info("The given target path is {}", target);
+        var normalizeTargetPath = getNormalizePath(target);
+        var targetPathNames = normalizeTargetPath.getNames();
+
+        var targetResourceInBox  = jadFsTreeWalker.walk(targetPathNames);
+
+        if (targetResourceInBox instanceof JadFsResource.NullJadFsResource
+                || targetResourceInBox.resourceType == JadFsResourceType.File.File) {
+
+            var parent = normalizeTargetPath.getParent();
+            var parentPathNames = parent.getNames();
+
+            log_info("Checking for parent path for target {}", parent);
+
+            targetResourceInBox = jadFsTreeWalker.walk(parentPathNames);
+        }
+
+        var sourceResourceInBox = jadFsTreeWalker.walk(sourcePathNames);
+
+        return new Pair<>(sourceResourceInBox, targetResourceInBox);
+    }
+
 }

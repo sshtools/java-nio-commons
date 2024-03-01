@@ -87,4 +87,9 @@ public class MockBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
     public FileSysUserInfo getFileSysUserInfo() {
         return null;
     }
+
+    @Override
+    public void log_info(String format, Object... arguments) {
+
+    }
 }
