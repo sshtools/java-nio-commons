@@ -280,5 +280,6 @@
 		<module>sftp-niofs</module>
 		<module>sftp-niofs-tests</module>
 		<module>box-niofs</module>
+		<module>ms-onedrive-niofs</module>
 	</modules>
 </project>
