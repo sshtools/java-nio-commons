@@ -18,7 +18,6 @@ package com.sshtools.synergy.niofs;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -120,11 +119,12 @@ public class SftpFileSystems {
 	 */
 	public static FileSystem newFileSystem(SftpClient sftp, String path) throws IOException {
 		var conx = sftp.getSubsystemChannel().getConnection();
-		return FileSystems.newFileSystem(URI.create(String.format(
+		var uri = URI.create(String.format(
 				"sftp://%s@%s%s%s", conx.getUsername(), 
 					Utils.formatHostnameAndPort(
-							conx.getRemoteIPAddress(), conx.getRemotePort()), path.equals("") ? "" : "/", path )), 
-							Map.of(SftpFileSystemProvider.SFTP_CLIENT, sftp));
+							conx.getRemoteIPAddress(), conx.getRemotePort()), path.equals("") ? "" : "/", path ));
+		
+		return new SftpFileSystemProvider().newFileSystem(uri, Map.of(SftpFileSystemProvider.SFTP_CLIENT, sftp));
 	}
 
 	/**
@@ -135,6 +135,6 @@ public class SftpFileSystems {
 	 * @throws IOException if file system cannot be created
 	 */
 	public static FileSystem newFileSystem(Map<String, ?> environment) throws IOException {
-		return FileSystems.newFileSystem(URI.create("sftp:////"), environment);
+		return new SftpFileSystemProvider().newFileSystem(URI.create("sftp:////"), environment);
 	}
 }
