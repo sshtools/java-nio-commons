@@ -43,6 +43,10 @@ public class JadFsResource {
         return this.resourceType == JadFsResourceType.Folder;
     }
 
+    public static boolean isNullResource(JadFsResource resource) {
+        return resource instanceof NullJadFsResource;
+    }
+
     public static class NullJadFsResource extends JadFsResource {
         private NullJadFsResource() {
             super(null, null, null);
