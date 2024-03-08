@@ -66,7 +66,7 @@ public abstract class AbstractRemoteSetup {
         channel.write(bfSrc);
     }
 
-    protected URI getPath(String path) {
+    protected URI toURI(String path) {
         try {
             return new URI(path);
         } catch (URISyntaxException e) {

@@ -50,7 +50,7 @@ public class BoxWatchServiceTest extends AbstractRemoteSetup {
 
         var provider = getNewBoxFileSystemProvider();
 
-        var sourceDirectory = (BasePath) provider.getPath(getPath(BASE_DIRECTORY)).resolve(DIRECTORY_CREATE);
+        var sourceDirectory = (BasePath) provider.getPath(toURI(BASE_DIRECTORY)).resolve(DIRECTORY_CREATE);
 
         provider.createDirectory(sourceDirectory);
 
@@ -85,7 +85,7 @@ public class BoxWatchServiceTest extends AbstractRemoteSetup {
 
         var provider = getNewBoxFileSystemProvider();
 
-        var sourceDirectory = (BasePath) provider.getPath(getPath(BASE_DIRECTORY)).resolve(DIRECTORY_MODIFY);
+        var sourceDirectory = (BasePath) provider.getPath(toURI(BASE_DIRECTORY)).resolve(DIRECTORY_MODIFY);
 
         provider.createDirectory(sourceDirectory);
 
@@ -125,7 +125,7 @@ public class BoxWatchServiceTest extends AbstractRemoteSetup {
 
         var provider = getNewBoxFileSystemProvider();
 
-        var sourceDirectory = (BasePath) provider.getPath(getPath(BASE_DIRECTORY)).resolve(DIRECTORY_DELETE);
+        var sourceDirectory = (BasePath) provider.getPath(toURI(BASE_DIRECTORY)).resolve(DIRECTORY_DELETE);
 
         provider.createDirectory(sourceDirectory);
 
