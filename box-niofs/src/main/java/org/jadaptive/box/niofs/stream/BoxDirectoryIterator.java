@@ -18,6 +18,7 @@ package org.jadaptive.box.niofs.stream;
 import com.box.sdk.BoxFolder;
 import com.box.sdk.BoxItem;
 import org.jadaptive.box.niofs.path.BoxPath;
+import org.jadaptive.niofs.stream.NullFilter;
 
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
@@ -32,7 +33,7 @@ public class BoxDirectoryIterator implements Iterator<Path> {
     private final BoxPath dir;
 
     private final Iterator<BoxItem.Info> infoIterator;
-    public BoxDirectoryIterator(BoxFolder folder, BoxPath dir, DirectoryStream.Filter filter) {
+    public BoxDirectoryIterator(BoxFolder folder, BoxPath dir, DirectoryStream.Filter<? super Path> filter) {
         this.folder = folder;
         this.dir = dir;
         this.infoIterator = filter == null || filter instanceof NullFilter
@@ -53,7 +54,7 @@ public class BoxDirectoryIterator implements Iterator<Path> {
 
     }
 
-    private static boolean matchFileFilter(BoxPath dir, DirectoryStream.Filter filter, BoxItem.Info p) {
+    private static boolean matchFileFilter(BoxPath dir, DirectoryStream.Filter<? super Path> filter, BoxItem.Info p) {
         try {
             var path = dir.resolve(p.getName());
             return filter.accept(path);

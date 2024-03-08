@@ -19,7 +19,7 @@ import com.box.sdk.BoxAPIConnection;
 import com.box.sdk.BoxFile;
 import com.box.sdk.BoxFolder;
 import org.jadaptive.api.file.FileSysFileInfo;
-import org.jadaptive.box.niofs.api.io.ChannelBufferWrapperInputStream;
+import org.jadaptive.niofs.io.ChannelBufferWrapperInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

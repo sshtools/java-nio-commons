@@ -16,10 +16,10 @@
 package org.jadaptive.box.niofs.filesysprovider;
 
 import org.jadaptive.box.niofs.setup.AbstractRemoteSetup;
-import org.jadaptive.box.niofs.stream.NullFilter;
 import org.jadaptive.niofs.exception.JadNioFsFileAlreadyExistsFoundException;
 import org.jadaptive.niofs.exception.JadNioFsFileNotFoundException;
 import org.jadaptive.niofs.exception.JadNioFsParentPathInvalidException;
+import org.jadaptive.niofs.stream.NullFilter;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

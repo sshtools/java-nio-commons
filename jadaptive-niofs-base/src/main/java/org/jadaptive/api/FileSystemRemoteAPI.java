@@ -19,6 +19,7 @@ import org.jadaptive.api.file.FileSysFileInfo;
 import org.jadaptive.api.folder.JadFsResource;
 import org.jadaptive.api.folder.JadFsResourceType;
 import org.jadaptive.api.user.FileSysUserInfo;
+import org.jadaptive.niofs.attr.JadNioFileAttributes;
 import org.jadaptive.niofs.filesys.BaseFileSystem;
 import org.jadaptive.niofs.path.BasePath;
 import org.jadaptive.util.Pair;
@@ -29,12 +30,10 @@ import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
-public interface FileSystemRemoteAPI<P> {
+public interface FileSystemRemoteAPI<P extends BasePath> {
 
     void createDirectory(P path, FileAttribute<?>... attrs);
 
@@ -45,8 +44,6 @@ public interface FileSystemRemoteAPI<P> {
     void move(P source, P target, CopyOption...options);
 
     <A extends BasicFileAttributes> A readAttributes(P path, LinkOption...options);
-
-    Map<String, Object> readAttributes(P path, String attributes, LinkOption... options);
 
     SeekableByteChannel newByteChannel(P path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws FileNotFoundException, IOException;
 
@@ -61,6 +58,33 @@ public interface FileSystemRemoteAPI<P> {
     FileSysUserInfo getFileSysUserInfo();
 
     void log_info(String format, Object... arguments);
+
+    default Map<String, Object> readAttributes(P path, String attributes, LinkOption... options) {
+
+        if (attributes == null) {
+            return Collections.emptyMap();
+        }
+
+        var jadAttributes = (JadNioFileAttributes) readAttributes(path, options);
+        var jadAttributesMap = jadAttributes.toMap();
+
+        var keys = Arrays.stream(attributes.split(","))
+                .filter(s -> !s.isBlank())
+                .map(s -> s.trim())
+                .collect(Collectors.toSet());
+
+
+        var map = new HashMap<String, Object>();
+
+        for (String key: keys) {
+            var value = jadAttributesMap.get(key);
+            if (value != null) {
+                map.put(key, value);
+            }
+        }
+
+        return map;
+    }
 
     default BasePath getNormalizePath(BasePath dir) {
         BasePath normalizePath;
@@ -99,6 +123,18 @@ public interface FileSystemRemoteAPI<P> {
         return (BasePath) mergedPath.normalize();
     }
 
+    /**
+     * Usually when we copy or move we need target files parent for operation.
+     * As it is the parent where file is to be copied or moved.
+     * Here by walking file tree we try to find objects in remote host, source file
+     * and target parent folder.
+     *
+     * @param jadFsTreeWalker
+     * @param source
+     * @param target
+     *
+     * @return Pair of source file and target folder.
+     */
     default Pair<JadFsResource> sourceTargetResources(JadFsResource.JadFsTreeWalker jadFsTreeWalker,
                                                       BasePath source, BasePath target) {
 
@@ -115,7 +151,7 @@ public interface FileSystemRemoteAPI<P> {
         var targetResourceInBox  = jadFsTreeWalker.walk(targetPathNames);
 
         if (targetResourceInBox instanceof JadFsResource.NullJadFsResource
-                || targetResourceInBox.resourceType == JadFsResourceType.File.File) {
+                || targetResourceInBox.resourceType == JadFsResourceType.File) {
 
             var parent = normalizeTargetPath.getParent();
             var parentPathNames = parent.getNames();

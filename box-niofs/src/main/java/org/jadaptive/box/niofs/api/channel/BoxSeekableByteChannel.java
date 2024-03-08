@@ -17,11 +17,12 @@ package org.jadaptive.box.niofs.api.channel;
 
 import com.box.sdk.BoxAPIConnection;
 import com.box.sdk.BoxFile;
+import org.jadaptive.api.channel.FileRangeToRead;
 import org.jadaptive.api.file.FileSysFileInfo;
 import org.jadaptive.box.niofs.api.channel.write.LargeFileSessionWrite;
 import org.jadaptive.box.niofs.api.channel.write.SmallFileWrite;
 import org.jadaptive.box.niofs.api.channel.write.WriteInfo;
-import org.jadaptive.box.niofs.api.io.ChannelBufferWrapperOutputStream;
+import org.jadaptive.niofs.io.ChannelBufferWrapperOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +71,7 @@ public class BoxSeekableByteChannel implements SeekableByteChannel {
     public int read(ByteBuffer dst) throws IOException {
 
         try {
+
             lock.lock();
 
             if (this.boxFileInfo.isNotPresent()) {
@@ -87,24 +89,35 @@ public class BoxSeekableByteChannel implements SeekableByteChannel {
                 return -1;
             }
 
-            logger.debug("Bytes to read is {} , position is {} and index of range to read is {}",
+            logger.debug("Bytes to read is {}, position is {} and index of range to read is {}",
                     bytesToRead, this.position, indexOfRangeToRead);
 
             // download chunk and put in buffer
             var byteStream = new ChannelBufferWrapperOutputStream(dst);
-            this.boxFile.downloadRange(byteStream, this.position, fileRangeToRead.indexOfRangeToRead);
+            this.boxFile.downloadRange(byteStream, this.position, fileRangeToRead.getIndexOfRangeToRead());
 
-            this.position = (int) (fileRangeToRead.indexOfRangeToRead + 1);
+            this.position = (int) (fileRangeToRead.getIndexOfRangeToRead() + 1);
 
             logger.debug("File chunk downloaded and position updated to {}",
                     this.position);
 
-            return fileRangeToRead.bytesToRead;
+            return fileRangeToRead.getBytesToRead();
+
         } finally {
             lock.unlock();
         }
     }
 
+    /**
+     * Note: This functions assumes you will provide data bytes to be written as one chunk
+     * of ByteBuffer, true seekable write is not supported.
+     *
+     * @param src
+     *         The buffer from which bytes are to be retrieved
+     *
+     * @return
+     * @throws IOException
+     */
     @Override
     public int write(ByteBuffer src) throws IOException {
 
@@ -185,47 +198,4 @@ public class BoxSeekableByteChannel implements SeekableByteChannel {
 
     }
 
-    private static class FileRangeToRead {
-        private int bytesToRead;
-        private long indexOfRangeToRead;
-
-        public void compute(SeekableByteChannel channel, int capacity) throws IOException {
-
-            var size = channel.size();
-            var position = channel.position();
-
-            logger.debug("The file size is {} current position is {} and destination buffer capacity is {}",
-                    size, position, capacity);
-
-            var maxIndex = size - 1; // max index of file when read byte by byte
-            if (position >= maxIndex) {
-
-                logger.debug("File read done, the position is {} and max index is {}",
-                        position, maxIndex);
-
-                this.bytesToRead =  -1;
-                this.indexOfRangeToRead = -1;
-
-                return;
-            }
-
-            this.bytesToRead = capacity; // we will try to read bytes as per capacity of buffer
-            if (position + bytesToRead > maxIndex) {
-                this.indexOfRangeToRead = (int) maxIndex;
-                // in case not much to read as capacity given.
-                // basically last chunk remaining
-                this.bytesToRead = (int) (size - position);
-            } else {
-                this.indexOfRangeToRead = position + (this.bytesToRead - 1);
-            }
-        }
-
-        public int getBytesToRead() {
-            return this.bytesToRead;
-        }
-
-        public long getIndexOfRangeToRead() {
-            return this.indexOfRangeToRead;
-        }
-    }
 }
