@@ -16,21 +16,27 @@
 package org.jadaptive.onedrive.niofs.path;
 
 import org.jadaptive.niofs.api.FileSystemRemoteAPIStub;
-import org.jadaptive.niofs.path.BasePathService;
-import org.jadaptive.niofs.path.BasePathServiceTest;
+import org.jadaptive.niofs.filesys.BaseFileSystem;
+import org.jadaptive.niofs.path.BasePathTest;
 import org.jadaptive.onedrive.niofs.api.client.locator.OneDriveConnectionAPILocator;
 import org.jadaptive.onedrive.niofs.filesys.OneDriveFileSystem;
 import org.jadaptive.onedrive.niofs.filesysprovider.OneDriveFileSystemProvider;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-public class OneDrivePathServiceTest extends BasePathServiceTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class OneDrivePathTest extends BasePathTest {
 
     @BeforeAll
     static void init() {
         OneDriveConnectionAPILocator.setOneDriveRemoteAPI(new FileSystemRemoteAPIStub<>() {});
     }
+
     @Override
-    protected BasePathService getNewBasePathService() {
+    public BaseFileSystem getFileSystem() {
+
         var oneDriveRemoteAPI = OneDriveConnectionAPILocator.getOneDriveRemoteAPI();
         var pathService = new OneDrivePathService();
         var provider = new OneDriveFileSystemProvider();
@@ -38,6 +44,16 @@ public class OneDrivePathServiceTest extends BasePathServiceTest {
         var fs = new OneDriveFileSystem(provider, pathService, oneDriveRemoteAPI);
         pathService.setFileSystem(fs);
 
-        return pathService;
+        return fs;
+    }
+
+    @Override
+    @Test
+    @DisplayName("OneDrive path URI")
+    public void testToUri() {
+        test(fs -> {
+           var uriString = fs.getPath("/", "some", "path", "to", "file").toUri().toString();
+           assertEquals("onedrive:///some/path/to/file", uriString);
+        });
     }
 }
