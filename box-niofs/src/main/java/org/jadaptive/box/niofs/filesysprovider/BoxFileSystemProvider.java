@@ -23,6 +23,7 @@ import org.jadaptive.box.niofs.path.BoxPathService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.channels.SeekableByteChannel;
@@ -130,9 +131,13 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 	}
 
 	@Override
-	public void checkAccess(Path path, AccessMode... modes) {
+	public void checkAccess(Path path, AccessMode... modes) throws FileNotFoundException {
 		checkPath(path);
-		boxFileSystem.getBoxRemoteAPI().getFileSysFileInfo((BoxPath) path);
+		var file = boxFileSystem.getBoxRemoteAPI().getFileSysFileInfo((BoxPath) path);
+
+		if (file.getFileId() == null) {
+			throw new FileNotFoundException(String.format("File not found %s.", path));
+		}
 	}
 
 	@Override
