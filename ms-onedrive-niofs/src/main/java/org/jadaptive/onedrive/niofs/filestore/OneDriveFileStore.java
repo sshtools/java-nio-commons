@@ -20,24 +20,42 @@ import org.jadaptive.onedrive.niofs.path.OneDrivePath;
 
 import java.io.IOException;
 import java.nio.file.FileStore;
+import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileStoreAttributeView;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class OneDriveFileStore extends FileStore {
 
     private final FileSystemRemoteAPI<OneDrivePath> oneDriveRemoteAPI;
+
+    private volatile String name;
+
+    private final Lock lock = new ReentrantLock();
 
     public OneDriveFileStore(FileSystemRemoteAPI<OneDrivePath> oneDriveRemoteAPI) {
         this.oneDriveRemoteAPI = oneDriveRemoteAPI;
     }
     @Override
     public String name() {
-        return null;
+        if (name == null) {
+            lock.lock();
+            try {
+                if (name == null) {
+                    name = String.format("onedrive-%s", this.oneDriveRemoteAPI.getSessionName());
+                }
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        return name;
     }
 
     @Override
     public String type() {
-        return null;
+        return "remote";
     }
 
     @Override
@@ -47,36 +65,37 @@ public class OneDriveFileStore extends FileStore {
 
     @Override
     public long getTotalSpace() throws IOException {
-        return 0;
+        return this.oneDriveRemoteAPI.getFileSysUserInfo().getSpaceAmount();
     }
 
     @Override
     public long getUsableSpace() throws IOException {
-        return 0;
+        return this.oneDriveRemoteAPI.getFileSysUserInfo().getSpaceAmount();
     }
 
     @Override
     public long getUnallocatedSpace() throws IOException {
-        return 0;
+        var oneDriveUserInfo = this.oneDriveRemoteAPI.getFileSysUserInfo();
+        return oneDriveUserInfo.getSpaceAmount() - oneDriveUserInfo.getSpaceUsed();
     }
 
     @Override
     public boolean supportsFileAttributeView(Class<? extends FileAttributeView> type) {
-        return false;
+        return BasicFileAttributeView.class.equals(type);
     }
 
     @Override
     public boolean supportsFileAttributeView(String name) {
-        return false;
+        return name.equals("basic");
     }
 
     @Override
     public <V extends FileStoreAttributeView> V getFileStoreAttributeView(Class<V> type) {
-        return null;
+        return null; // no supported views
     }
 
     @Override
     public Object getAttribute(String attribute) throws IOException {
-        return null;
+        throw new UnsupportedOperationException();
     }
 }
