@@ -115,7 +115,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
         var copied = actOnSourceTargetResources(pair.first, pair.second, api,
                 (s, t) -> s.copy(t, targetName), BoxFolder::copy);
 
-        logger.info("Folder copied '{}' with id '{}'", copied.getName(), copied.getID());
+        logger.info("File copied '{}' with id '{}'", copied.getName(), copied.getID());
     }
 
     @Override
@@ -130,7 +130,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
         var moved = actOnSourceTargetResources(pair.first, pair.second, api,
                 (s, t) -> s.move(t, targetName), BoxFolder::move);
 
-        logger.info("Folder moved '{}' with id '{}'", moved.getName(), moved.getID());
+        logger.info("File moved '{}' with id '{}'", moved.getName(), moved.getID());
     }
 
     @Override
@@ -150,7 +150,7 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
         var resource = boxFsTreeWalker.walk(pathNames);
 
         if (resource instanceof JadFsResource.NullJadFsResource) {
-            throw new JadNioFsParentPathInvalidException("Parent path is not present in remote account.");
+            throw new JadNioFsParentPathInvalidException("Path is not present in remote account.");
         }
 
         var current = normalizePath.getFileName();
@@ -164,34 +164,6 @@ public abstract class BaseBoxRemoteAPI implements FileSystemRemoteAPI<BoxPath> {
         }
 
         throw new JadNioFsFileNotFoundException("Resource does not exists.");
-    }
-
-    @Override
-    public Map<String, Object> readAttributes(BoxPath path, String attributes, LinkOption... options) {
-
-        if (attributes == null) {
-            return Collections.emptyMap();
-        }
-
-        var jadAttributes = readAttributes(path, options);
-        var jadAttributesMap = jadAttributes.toMap();
-
-        var keys = Arrays.stream(attributes.split(","))
-                    .filter(s -> !s.isBlank())
-                    .map(s -> s.trim())
-                    .collect(Collectors.toSet());
-
-
-        var map = new HashMap<String, Object>();
-
-        for (String key: keys) {
-            var value = jadAttributesMap.get(key);
-            if (value != null) {
-                map.put(key, value);
-            }
-        }
-
-        return map;
     }
 
     @Override
