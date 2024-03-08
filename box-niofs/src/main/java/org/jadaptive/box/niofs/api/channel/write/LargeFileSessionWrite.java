@@ -17,7 +17,7 @@ package org.jadaptive.box.niofs.api.channel.write;
 
 import com.box.sdk.*;
 import org.jadaptive.api.file.FileSysFileInfo;
-import org.jadaptive.box.niofs.api.io.ChannelBufferWrapperInputStream;
+import org.jadaptive.niofs.io.ChannelBufferWrapperInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ public class LargeFileSessionWrite implements FileWriteDelegate {
 
         var capacity =  src.capacity();
 
-        //  File size 5 less than minimum allowed for this API: 20000000
+        //  File size is less than minimum allowed for this API: 20000000
         if (capacity < 20000000) {
             throw new IllegalArgumentException(
                     format("File size less than API requirement of 20000000 is %s", capacity)
@@ -87,13 +87,13 @@ public class LargeFileSessionWrite implements FileWriteDelegate {
                 partSize = diff;
             }
 
-            //Upload a part. It can be uploaded asynchorously
+            //Upload a part. It can be uploaded asynchronously
             var part = session.uploadPart(dis, offset, (int)partSize, capacity);
             parts.add(part);
 
             logger.debug("Uploaded part {} with digest {}", part.getPartId(), part.getSha1());
 
-            //Increase the offset and proceesed bytes to calculate the Content-Range header.
+            //Increase the offset and processed bytes to calculate the Content-Range header.
             processed += partSize;
             offset += partSize;
         }
