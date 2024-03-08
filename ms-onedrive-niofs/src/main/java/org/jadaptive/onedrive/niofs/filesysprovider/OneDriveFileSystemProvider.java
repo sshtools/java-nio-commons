@@ -16,6 +16,7 @@
 package org.jadaptive.onedrive.niofs.filesysprovider;
 
 import org.jadaptive.onedrive.niofs.filesys.OneDriveFileSystem;
+import org.jadaptive.onedrive.niofs.path.OneDrivePath;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,5 +131,14 @@ public class OneDriveFileSystemProvider extends FileSystemProvider {
     @Override
     public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
 
+    }
+
+    private void checkPath(Path dir) {
+        if (!isSameInstance(dir)) {
+            throw new IllegalArgumentException("Path is not an instance of OneDrivePath.");
+        }
+    }
+    private boolean isSameInstance(Path path) {
+        return path instanceof OneDrivePath;
     }
 }
