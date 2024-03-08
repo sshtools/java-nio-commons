@@ -16,10 +16,15 @@
 package org.jadaptive.onedrive.niofs.api;
 
 import com.microsoft.graph.drives.item.items.item.copy.CopyPostRequestBody;
+import com.microsoft.graph.drives.item.items.item.createuploadsession.CreateUploadSessionPostRequestBody;
 import com.microsoft.graph.models.*;
 import com.microsoft.graph.serviceclient.GraphServiceClient;
+import com.microsoft.kiota.RequestAdapter;
 import org.jadaptive.api.folder.JadFsResource;
+import org.jadaptive.niofs.attr.JadNioFileAttributes;
 
+import java.nio.file.LinkOption;
+import java.nio.file.attribute.FileTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -34,7 +39,7 @@ public class OneDriveRemoteAPICaller {
 
     public OneDriveRemoteAPICaller(GraphServiceClient graphServiceClient) {
         this.graphServiceClient = graphServiceClient;
-        this.drive = getDrive().orElseThrow(() -> new IllegalStateException("No drive found."));
+        this.drive = eagerLoadDriveInfo().orElseThrow(() -> new IllegalStateException("No drive found."));
     }
 
     public OneDriveRemoteAPICaller(GraphServiceClient graphServiceClient, String id) {
@@ -46,19 +51,8 @@ public class OneDriveRemoteAPICaller {
         return graphServiceClient.me().get();
     }
 
-    public Optional<Drive> getDrive() {
-        var drives = graphServiceClient.me().drives().get().getValue();
-
-        if (drives != null) {
-
-            if (drives.size() != 1) {
-                throw new IllegalStateException("No drive or more than one drive.");
-            }
-
-            return Optional.ofNullable(drives.get(0));
-        }
-
-        return Optional.empty();
+    public Drive getDrive() {
+        return drive;
     }
 
     public Optional<Drive> getDriveById(String id) {
@@ -71,9 +65,7 @@ public class OneDriveRemoteAPICaller {
 
     public Optional<DriveItem> getDriveRootItem() {
 
-        var driveId = this.drive.getId();
-
-        Objects.requireNonNull(driveId, "Drive id cannot be null.");
+        var driveId = Objects.requireNonNull(this.drive.getId(), "Drive id cannot be null.");
 
         return Optional.ofNullable(graphServiceClient.drives().byDriveId(driveId).root().get());
 
@@ -89,19 +81,28 @@ public class OneDriveRemoteAPICaller {
 
     public List<DriveItem> getDriveItems(DriveItem parent) {
 
-        var driveId = this.drive.getId();
+        var driveId = Objects.requireNonNull(this.drive.getId(), "Drive id cannot be null.");
 
-        Objects.requireNonNull(driveId, "Drive id cannot be null.");
+        var parentId = Objects.requireNonNull(parent.getId(), "Parent drive item id cannot be null.");
 
-        var parentId = parent.getId();
-
-        Objects.requireNonNull(driveId, "Parent drive item cannot be null.");
-
-        var result = graphServiceClient.drives()
+        var result = Objects.requireNonNull(graphServiceClient.drives()
                 .byDriveId(driveId).items()
-                .byDriveItemId(parentId).children().get().getValue();
+                .byDriveItemId(parentId).children().get()).getValue();
 
         return result == null ? Collections.emptyList() : result;
+    }
+
+    public Optional<DriveItem> getDriveItem(JadFsResource resource) {
+
+        var driveId = Objects.requireNonNull(this.drive.getId(), "Drive id cannot be null.");
+
+        var resourceId = Objects.requireNonNull(resource.id, "Resource item id cannot be null.");
+
+        return Optional.ofNullable(graphServiceClient.drives()
+                .byDriveId(driveId)
+                .items()
+                .byDriveItemId(resourceId)
+                .get());
     }
 
     public DriveItem createFolder(String folderName, JadFsResource parentFolder) {
@@ -111,7 +112,7 @@ public class OneDriveRemoteAPICaller {
         Objects.requireNonNull(parentFolder,"Parent folder cannot be null");
         Objects.requireNonNull(parentFolder.id,"Parent folder Id cannot be null.");
 
-        var driveId = this.drive.getId();
+        var driveId = Objects.requireNonNull(this.drive.getId(), "Drive id cannot be null.");
 
         var driveItem = new DriveItem();
         driveItem.setName(folderName);
@@ -130,7 +131,7 @@ public class OneDriveRemoteAPICaller {
         Objects.requireNonNull(resource,"Resource item cannot be null");
         Objects.requireNonNull(resource.id,"Resource item Id cannot be null.");
 
-        var driveId = this.drive.getId();
+        var driveId = Objects.requireNonNull(this.drive.getId(), "Drive id cannot be null.");
 
         graphServiceClient.drives()
                 .byDriveId(driveId)
@@ -139,17 +140,17 @@ public class OneDriveRemoteAPICaller {
                 .delete();
     }
 
-    public DriveItem copy(JadFsResource source, JadFsResource target) {
+    public DriveItem copy(JadFsResource source, JadFsResource parent, String targetName) {
 
-        var driveId = this.drive.getId();
+        var driveId = Objects.requireNonNull(this.drive.getId(), "Drive id cannot be null.");
 
         var parentReference = new ItemReference();
         parentReference.setDriveId(driveId);
-        parentReference.setId(target.id);
+        parentReference.setId(parent.id);
 
         var copyPostRequestBody = new CopyPostRequestBody();
         copyPostRequestBody.setParentReference(parentReference);
-        copyPostRequestBody.setName(target.name);
+        copyPostRequestBody.setName(targetName);
 
         return graphServiceClient.drives()
                 .byDriveId(driveId)
@@ -160,16 +161,16 @@ public class OneDriveRemoteAPICaller {
 
     }
 
-    public DriveItem move(JadFsResource source, JadFsResource target) {
+    public DriveItem move(JadFsResource source, JadFsResource parent, String targetName) {
 
-        var driveId = this.drive.getId();
+        var driveId = Objects.requireNonNull(this.drive.getId(), "Drive id cannot be null.");
 
         ItemReference parentReference = new ItemReference();
-        parentReference.setId(target.id);
+        parentReference.setId(parent.id);
 
         DriveItem driveItem = new DriveItem();
         driveItem.setParentReference(parentReference);
-        driveItem.setName(target.name);
+        driveItem.setName(targetName);
 
         return graphServiceClient.drives()
                 .byDriveId(driveId)
@@ -177,6 +178,72 @@ public class OneDriveRemoteAPICaller {
                 .byDriveItemId(source.id)
                 .patch(driveItem);
 
+    }
+
+    public JadNioFileAttributes getJadAttributesForPath(JadFsResource resource, LinkOption... options) {
+
+        var item = getDriveItem(resource)
+                .orElseThrow(() -> new IllegalArgumentException("No remote resource found."));
+
+        var regularFile = isRegularFile(item);
+
+        var size = item.getSize();
+        var fileKey = item.getId();
+
+
+        var creationTime = item.getCreatedDateTime() == null
+                ? FileTime.fromMillis(0)
+                : FileTime.from(item.getCreatedDateTime().toInstant());
+
+        var fileAttributes = new JadNioFileAttributes(creationTime, regularFile, size, fileKey);
+
+        if (item.getLastModifiedDateTime() != null) {
+            var lastModifiedTime = FileTime.from(item.getLastModifiedDateTime().toInstant());
+            fileAttributes.setLastModifiedTime(lastModifiedTime);
+        }
+
+        return fileAttributes;
+    }
+
+    public String getDriveItemDownloadUrl(JadFsResource resource) {
+        var item = getDriveItem(resource).orElseThrow(() -> new IllegalArgumentException("No remote resource found."));
+        var additionalData = Objects.requireNonNull(item.getAdditionalData(), "No additional data found, is null");
+        return (String) Objects.requireNonNull(additionalData.get("@microsoft.graph.downloadUrl"), "Download URL is null.");
+    }
+
+    public String getUploadUrl(String itemPath) {
+        var uploadSession = createUploadSession(Objects.requireNonNull(itemPath,"Item path cannot be null."));
+        return uploadSession.getUploadUrl();
+    }
+
+    public RequestAdapter getRequestAdapter() {
+        return this.graphServiceClient.getRequestAdapter();
+    }
+
+    public UploadSession createUploadSession(String itemPath) {
+
+        Objects.requireNonNull(itemPath,"Item path cannot be null.");
+
+        var driveId = Objects.requireNonNull(this.drive.getId(), "Drive id cannot be null.");
+
+        // Set body of the upload session request
+        var uploadSessionRequest = new CreateUploadSessionPostRequestBody();
+        var properties = new DriveItemUploadableProperties();
+        properties.getAdditionalData().put("@microsoft.graph.conflictBehavior", "replace");
+        uploadSessionRequest.setItem(properties);
+
+        var relativeToRootItemPath = String.format("root:%s:", itemPath);
+
+        System.out.println("Uploading to relative path at " + relativeToRootItemPath);
+
+        // Create an upload session
+        // ItemPath does not need to be a path to an existing item
+        return graphServiceClient.drives()
+                .byDriveId(driveId)
+                .items()
+                .byDriveItemId(relativeToRootItemPath)
+                .createUploadSession()
+                .post(uploadSessionRequest);
     }
 
     private Optional<Drive> getDrive(Predicate<? super Drive> filter) {
@@ -193,6 +260,28 @@ public class OneDriveRemoteAPICaller {
             }
 
             return foundDrives.stream().findFirst();
+        }
+
+        return Optional.empty();
+    }
+
+    private static boolean isRegularFile(DriveItem item) {
+
+        Objects.requireNonNull(item, "Drive item cannot be null");
+
+        return item.getFile() != null;
+    }
+
+    private Optional<Drive> eagerLoadDriveInfo() {
+        var drives = Objects.requireNonNull(graphServiceClient.me().drives().get()).getValue();
+
+        if (drives != null) {
+
+            if (drives.size() != 1) {
+                throw new IllegalStateException("No drive or more than one drive.");
+            }
+
+            return Optional.ofNullable(drives.get(0));
         }
 
         return Optional.empty();

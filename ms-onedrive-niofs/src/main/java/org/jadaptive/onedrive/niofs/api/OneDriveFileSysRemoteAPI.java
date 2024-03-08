@@ -19,13 +19,19 @@ import com.microsoft.graph.models.DriveItem;
 import org.jadaptive.api.FileSystemRemoteAPI;
 import org.jadaptive.api.file.FileSysFileInfo;
 import org.jadaptive.api.folder.JadFsResource;
+import org.jadaptive.api.folder.JadFsResourceType;
 import org.jadaptive.api.user.FileSysUserInfo;
+import org.jadaptive.niofs.attr.JadNioFileAttributes;
 import org.jadaptive.niofs.exception.JadNioFsFileAlreadyExistsFoundException;
 import org.jadaptive.niofs.exception.JadNioFsFileNotFoundException;
+import org.jadaptive.niofs.exception.JadNioFsNotADirectoryException;
 import org.jadaptive.niofs.exception.JadNioFsParentPathInvalidException;
 import org.jadaptive.onedrive.niofs.api.folder.OneDriveFsTreeWalker;
 import org.jadaptive.onedrive.niofs.api.folder.OneDriveJadFsResourceMapper;
+import org.jadaptive.onedrive.niofs.api.http.client.OneDriveHttpClient;
+import org.jadaptive.onedrive.niofs.channel.OneDriveSeekableByteChannel;
 import org.jadaptive.onedrive.niofs.path.OneDrivePath;
+import org.jadaptive.onedrive.niofs.stream.OneDriveDirectoryStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +39,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
+import java.sql.Date;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePath> {
@@ -46,10 +54,13 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
 
     private final JadFsResource.JadFsTreeWalker oneDriveFolderTree;
 
+    private final OneDriveHttpClient oneDriveHttpClient;
+
 
     public OneDriveFileSysRemoteAPI(OneDriveRemoteAPICaller apiCaller) {
         this.apiCaller = apiCaller;
-        oneDriveFolderTree = new OneDriveFsTreeWalker(new OneDriveJadFsResourceMapper(this.apiCaller));
+        this.oneDriveFolderTree = new OneDriveFsTreeWalker(new OneDriveJadFsResourceMapper(this.apiCaller));
+        this.oneDriveHttpClient = new OneDriveHttpClient();
     }
 
     @Override
@@ -95,54 +106,169 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
 
         var pair = sourceTargetResources(oneDriveFolderTree, source, target);
 
-        var copied = new DriveItem();
+        var copied = apiCaller.copy(pair.first, pair.second, targetName);
 
-        logger.info("Folder copied '{}' with id '{}'", copied.getName(), copied.getId());
+        logger.info("File copied '{}' with id '{}'", copied.getName(), copied.getId());
     }
 
     @Override
     public void move(OneDrivePath source, OneDrivePath target, CopyOption... options) {
+        var targetName = target.getFileName().toString();
 
+        var pair = sourceTargetResources(oneDriveFolderTree, source, target);
+
+        var moved = apiCaller.move(pair.first, pair.second, targetName);
+
+        logger.info("File moved '{}' with id '{}'", moved.getName(), moved.getId());
     }
 
     @Override
-    public <A extends BasicFileAttributes> A readAttributes(OneDrivePath path, LinkOption... options) {
-        return null;
-    }
+    public JadNioFileAttributes readAttributes(OneDrivePath path, LinkOption... options) {
+        logger.info("The given path is {}", path);
 
-    @Override
-    public Map<String, Object> readAttributes(OneDrivePath path, String attributes, LinkOption... options) {
-        return null;
+        var normalizePath = getNormalizePath(path);
+
+        logger.info("The path normalized as {}", normalizePath);
+
+        var parent = normalizePath.getParent();
+        var pathNames = parent.getNames();
+
+        var resource = oneDriveFolderTree.walk(pathNames);
+
+        if (resource instanceof JadFsResource.NullJadFsResource) {
+            throw new JadNioFsParentPathInvalidException("Path is not present in remote account.");
+        }
+
+        return apiCaller.getJadAttributesForPath(resource, options);
     }
 
     @Override
     public SeekableByteChannel newByteChannel(OneDrivePath path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws FileNotFoundException, IOException {
-        return null;
+
+        logger.info("The given path is {}", path);
+
+        var normalizePath = getNormalizePath(path);
+
+        var resource = oneDriveFolderTree.walk(normalizePath.getNames());
+
+        var downloadUrl = Optional.<String>empty();
+
+        if (!JadFsResource.isNullResource(resource)) {
+            downloadUrl = Optional.ofNullable(apiCaller.getDriveItemDownloadUrl(resource));
+        }
+
+        var uploadUrl = apiCaller.getUploadUrl(normalizePath.toString());
+
+        var fileInfo = getFileSysFileInfo(path);
+
+        return new OneDriveSeekableByteChannel(fileInfo, downloadUrl, uploadUrl, this.oneDriveHttpClient);
     }
 
     @Override
     public FileSysFileInfo getFileSysFileInfo(OneDrivePath path) {
-        return null;
+        logger.info("The given path is {}", path);
+
+        var normalizePath = getNormalizePath(path);
+
+        logger.info("The path normalized as {}", normalizePath);
+
+        var nameFromPath = normalizePath.getFileName();
+
+        logger.info("Name from path is {}", nameFromPath);
+
+        var parent = normalizePath.getParent();
+        var pathNames = parent.getNames();
+
+        var parentResource = oneDriveFolderTree.walk(pathNames);
+
+        if (parentResource instanceof JadFsResource.NullJadFsResource) {
+            throw new JadNioFsParentPathInvalidException("Parent path is not present in remote account.");
+        }
+
+        var current = normalizePath.getFileName();
+
+        var parentDriveItem = new DriveItem();
+
+        parentDriveItem.setId(parentResource.id);
+        parentDriveItem.setName(parentResource.name);
+
+        var driveItems = apiCaller
+                .getDriveItems(parentDriveItem);
+
+        String id = null;
+        long size = 0;
+        String name = null;
+
+        for (var item : driveItems) {
+            if (item.getName().equals(current.toString())) {
+                id = item.getId();
+                size = item.getSize();
+                name = item.getName();
+                break;
+            }
+        }
+
+        // if not present in box, take name from path
+        if (id == null) {
+            name = nameFromPath.toString();
+        }
+
+        return new FileSysFileInfo(name, id, parentResource.id, size);
     }
 
     @Override
     public DirectoryStream<Path> newDirectoryStream(OneDrivePath dir, DirectoryStream.Filter<? super Path> filter) {
-        return null;
+        logger.info("The given path is {}", dir);
+
+        var normalizePath = getNormalizePath(dir);
+
+        logger.info("The path normalized as {}", dir);
+
+        var pathNames = normalizePath.getNames();
+
+        var resourceInOneDrive = oneDriveFolderTree.walk(pathNames);
+
+        if (resourceInOneDrive instanceof JadFsResource.NullJadFsResource) {
+            throw new JadNioFsParentPathInvalidException("Path is not present in remote account.");
+        }
+
+        if (resourceInOneDrive.resourceType == JadFsResourceType.File) {
+            throw new JadNioFsNotADirectoryException(String.format("Resource path not a directory '%s' ", normalizePath));
+        }
+
+        var folder = new DriveItem();
+        folder.setId(resourceInOneDrive.id);
+        folder.setName(resourceInOneDrive.name);
+
+        var items = apiCaller.getDriveItems(folder);
+        return new OneDriveDirectoryStream(items, dir, filter);
     }
 
     @Override
     public String getSessionName() {
-        return null;
+        var oneDriveUser = apiCaller.getUser();
+        Objects.requireNonNull(oneDriveUser,"One Drive User cannot be null.");
+        return oneDriveUser.getUserPrincipalName();
     }
 
     @Override
     public String getCurrentUserId() {
-        return null;
+        var oneDriveUser = apiCaller.getUser();
+        Objects.requireNonNull(oneDriveUser,"One Drive User cannot be null.");
+        return oneDriveUser.getId();
     }
 
     @Override
     public FileSysUserInfo getFileSysUserInfo() {
-        return null;
+        var oneDriveUser = apiCaller.getUser();
+        var oneDrive = apiCaller.getDrive();
+        var quota = oneDrive.getQuota();
+
+        var info = new FileSysUserInfo(oneDriveUser.getId(), oneDriveUser.getUserPrincipalName(),
+                oneDriveUser.getDisplayName(), quota.getTotal(),
+                quota.getUsed(), Date.from(oneDriveUser.getCreatedDateTime().toInstant()));
+
+        return info;
     }
 
     @Override
