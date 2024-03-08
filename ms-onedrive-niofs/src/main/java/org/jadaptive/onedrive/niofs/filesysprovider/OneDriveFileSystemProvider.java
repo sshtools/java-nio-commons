@@ -63,7 +63,7 @@ public class OneDriveFileSystemProvider extends FileSystemProvider {
 
     @NotNull
     @Override
-    public Path getPath(@NotNull URI uri) {
+    public OneDrivePath getPath(@NotNull URI uri) {
         if (oneDriveFileSystem == null) {
             initOneDriveFileSystem();
         }
