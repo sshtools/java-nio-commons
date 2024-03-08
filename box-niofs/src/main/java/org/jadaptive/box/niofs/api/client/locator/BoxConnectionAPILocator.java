@@ -29,11 +29,11 @@ public class BoxConnectionAPILocator {
     private BoxConnectionAPILocator() {}
 
     public static FileSystemRemoteAPI<BoxPath> getBoxRemoteAPI() {
-        Objects.requireNonNull(INSTANCE.fileSystemRemoteAPI, "Box Remote Api is not set.");
-        return INSTANCE.fileSystemRemoteAPI;
+        return Objects.requireNonNull(INSTANCE.fileSystemRemoteAPI, "Box Remote API is not set.");
     }
 
     public static void setBoxRemoteAPI(FileSystemRemoteAPI<BoxPath> boxRemoteAPI) {
+        Objects.requireNonNull(boxRemoteAPI, "Box Remote API cannot be null.");
         INSTANCE.fileSystemRemoteAPI = boxRemoteAPI;
     }
 }
