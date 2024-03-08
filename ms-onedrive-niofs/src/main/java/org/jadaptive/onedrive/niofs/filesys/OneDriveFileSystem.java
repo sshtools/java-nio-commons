@@ -120,4 +120,12 @@ public class OneDriveFileSystem extends BaseFileSystem {
     public WatchService newWatchService() throws IOException {
         return null;
     }
+
+    public FileSystemRemoteAPI<OneDrivePath> getOneDriveRemoteAPI() {
+        return oneDriveRemoteAPI;
+    }
+
+    public OneDriveFileStore getOneDriveFileStore() {
+        return oneDriveFileStore;
+    }
 }
