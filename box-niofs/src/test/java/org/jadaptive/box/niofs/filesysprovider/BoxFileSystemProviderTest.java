@@ -155,7 +155,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
     }
 
     @Test
-    @DisplayName("It should copy file one directory to another.")
+    @DisplayName("It should copy file from one directory to another.")
     void testShouldCopyFileFromOneDirectoryToAnother() throws IOException {
         var provider = getNewBoxFileSystemProvider();
 
@@ -183,7 +183,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
     }
 
     @Test
-    @DisplayName("It should copy file one directory to another.")
+    @DisplayName("It should throw exception if file to copy does not exists.")
     void testShouldThrowExceptionIfSourceIsNotPresentCopyFileFromOneDirectoryToAnother() {
         var provider = getNewBoxFileSystemProvider();
 
@@ -200,7 +200,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
     }
 
     @Test
-    @DisplayName("It should copy file one directory to another.")
+    @DisplayName("It should throw exception when file is copied to a folder which does not exists.")
     void testShouldThrowExceptionIfDestinationIsNotPresentCopyFileFromOneDirectoryToAnother() throws IOException {
         var provider = getNewBoxFileSystemProvider();
 
@@ -222,7 +222,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
     }
 
     @Test
-    @DisplayName("It should move file one directory to another.")
+    @DisplayName("It should move file from one directory to another.")
     void testShouldMoveFileFromOneDirectoryToAnother() throws IOException {
         var provider = getNewBoxFileSystemProvider();
 
@@ -254,7 +254,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
     }
 
     @Test
-    @DisplayName("It should copy file one directory to another.")
+    @DisplayName("It should throw exception when file to move does not exists.")
     void testShouldThrowExceptionIfSourceIsNotPresentMoveFileFromOneDirectoryToAnother() {
         var provider = getNewBoxFileSystemProvider();
 
@@ -271,7 +271,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
     }
 
     @Test
-    @DisplayName("It should copy file one directory to another.")
+    @DisplayName("It should throw exception when file to be moved to a folder does not exists.")
     void testShouldThrowExceptionIfDestinationIsNotPresentMoveFileFromOneDirectoryToAnother() throws IOException {
         var provider = getNewBoxFileSystemProvider();
 
@@ -301,7 +301,7 @@ public class BoxFileSystemProviderTest extends AbstractRemoteSetup {
 
         provider.createDirectory(sourceDirectory);
 
-        String sourcePath = "box:///test_box/test_file_same/file_to_copy.txt";
+        String sourcePath = "box:///test_box/test_file_same/file.txt";
 
         writeFileInBox(provider,
                 provider.getPath(toURI(sourcePath)),
