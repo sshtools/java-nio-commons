@@ -40,7 +40,10 @@ public class ChannelBufferWrapperInputStream extends InputStream {
         } finally {
             lock.unlock();
         }
-
     }
 
+    @Override
+    public int available() {
+        return buffer.capacity();
+    }
 }
