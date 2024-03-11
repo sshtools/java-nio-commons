@@ -48,11 +48,14 @@ public class OneDriveFileSystemProvider extends FileSystemProvider {
 
     @Override
     public String getScheme() {
-        return "onedrive";
+        if (oneDriveFileSystem == null) {
+            initOneDriveFileSystem();
+        }
+        return oneDriveFileSystem.getPathService().getScheme();
     }
 
     @Override
-    public FileSystem newFileSystem(URI uri, Map<String, ?> env) throws IOException {
+    public FileSystem newFileSystem(URI uri, Map<String, ?> env) {
         throw new UnsupportedOperationException();
     }
 
@@ -83,13 +86,13 @@ public class OneDriveFileSystemProvider extends FileSystemProvider {
     }
 
     @Override
-    public void createDirectory(Path path, FileAttribute<?>... attrs) throws IOException {
+    public void createDirectory(Path path, FileAttribute<?>... attrs) {
         checkPath(path);
         oneDriveFileSystem.getOneDriveRemoteAPI().createDirectory((OneDrivePath) path, attrs);
     }
 
     @Override
-    public void delete(Path path) throws IOException {
+    public void delete(Path path) {
         checkPath(path);
         oneDriveFileSystem.getOneDriveRemoteAPI().delete((OneDrivePath) path);
     }
@@ -109,7 +112,7 @@ public class OneDriveFileSystemProvider extends FileSystemProvider {
     }
 
     @Override
-    public boolean isSameFile(Path path1, Path path2) throws IOException {
+    public boolean isSameFile(Path path1, Path path2) {
         if(path1 instanceof OneDrivePath && path2 instanceof OneDrivePath && Files.exists(path1) && Files.exists(path2)) {
             var full1 = path1.normalize().toAbsolutePath();
             var full2 = path2.normalize().toAbsolutePath();
@@ -119,12 +122,12 @@ public class OneDriveFileSystemProvider extends FileSystemProvider {
     }
 
     @Override
-    public boolean isHidden(Path path) throws IOException {
+    public boolean isHidden(Path path) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public FileStore getFileStore(Path path) throws IOException {
+    public FileStore getFileStore(Path path) {
         checkPath(path);
         return ((OneDriveFileSystem) path.getFileSystem()).getOneDriveFileStore();
     }
@@ -146,19 +149,19 @@ public class OneDriveFileSystemProvider extends FileSystemProvider {
     }
 
     @Override
-    public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options) throws IOException {
+    public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options) {
         checkPath(path);
         return oneDriveFileSystem.getOneDriveRemoteAPI().readAttributes((OneDrivePath) path, options);
     }
 
     @Override
-    public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
+    public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) {
         checkPath(path);
         return oneDriveFileSystem.getOneDriveRemoteAPI().readAttributes((OneDrivePath) path, attributes, options);
     }
 
     @Override
-    public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
+    public void setAttribute(Path path, String attribute, Object value, LinkOption... options) {
 
     }
 

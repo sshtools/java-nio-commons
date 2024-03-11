@@ -55,6 +55,7 @@ public abstract class BasePathService {
     public abstract BasePath getPath(String first, String... more);
     public abstract BasePath getPath(URI uri);
     public abstract BasePath getWorkingDirectory();
+    public abstract String getScheme();
 
     protected BasePath getPathHelper(String first, String... more) {
 
@@ -293,7 +294,7 @@ public abstract class BasePathService {
      *
      * @param uri
      */
-    private static void checkURI(URI uri) {
+    private void checkURI(URI uri) {
         checkURI(uri, false);
     }
 
@@ -309,12 +310,12 @@ public abstract class BasePathService {
      * @param uri
      * @param needsPath pass boolean true if path is required in URI.
      */
-    private static void checkURI(URI uri, boolean needsPath) {
+    private void checkURI(URI uri, boolean needsPath) {
         requireNonNull(uri, "URI cannot be null.");
 
         var scheme = uri.getScheme();
         requireNonNull(scheme, "Scheme not found in URI.");
-        if (!"box".equals(scheme)) {
+        if (!getScheme().equals(scheme)) {
             throw new IllegalStateException(format("URI scheme is not 'box' is %s", scheme));
         }
 

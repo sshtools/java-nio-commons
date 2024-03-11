@@ -83,6 +83,11 @@ public class OneDrivePathService extends BasePathService {
     }
 
     @Override
+    public String getScheme() {
+        return "onedrive";
+    }
+
+    @Override
     public OneDrivePath createPathFromIndex(int beginIndex, int endIndex, List<String> names) {
         return (OneDrivePath) createPathFromIndexHelper(beginIndex,endIndex, names);
     }

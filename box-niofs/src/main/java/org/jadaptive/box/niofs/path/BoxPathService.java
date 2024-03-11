@@ -83,6 +83,11 @@ public class BoxPathService extends BasePathService {
     }
 
     @Override
+    public String getScheme() {
+        return "box";
+    }
+
+    @Override
     public BoxPath createPathFromIndex(int beginIndex, int endIndex, List<String> names) {
         return (BoxPath) createPathFromIndexHelper(beginIndex,endIndex, names);
     }

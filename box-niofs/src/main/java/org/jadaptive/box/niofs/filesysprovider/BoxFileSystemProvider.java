@@ -48,7 +48,10 @@ public class BoxFileSystemProvider extends FileSystemProvider {
 
 	@Override
 	public String getScheme() {
-		return "box";
+		if (boxFileSystem == null) {
+			initBoxFileSystem();
+		}
+		return boxFileSystem.getPathService().getScheme();
 	}
 
 	@Override
