@@ -234,8 +234,6 @@ public class OneDriveRemoteAPICaller {
 
         var relativeToRootItemPath = String.format("root:%s:", itemPath);
 
-        System.out.println("Uploading to relative path at " + relativeToRootItemPath);
-
         // Create an upload session
         // ItemPath does not need to be a path to an existing item
         return graphServiceClient.drives()
