@@ -106,9 +106,10 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
 
         var pair = sourceTargetResources(oneDriveFolderTree, source, target);
 
-        var copied = apiCaller.copy(pair.first, pair.second, targetName);
+        checkSourceTarget(pair.first, pair.second);
 
-        logger.info("File copied '{}' with id '{}'", copied.getName(), copied.getId());
+        apiCaller.copy(pair.first, pair.second, targetName);
+
     }
 
     @Override
@@ -116,6 +117,8 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
         var targetName = target.getFileName().toString();
 
         var pair = sourceTargetResources(oneDriveFolderTree, source, target);
+
+        checkSourceTarget(pair.first, pair.second);
 
         var moved = apiCaller.move(pair.first, pair.second, targetName);
 
@@ -130,13 +133,12 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
 
         logger.info("The path normalized as {}", normalizePath);
 
-        var parent = normalizePath.getParent();
-        var pathNames = parent.getNames();
+        var pathNames = normalizePath.getNames();
 
         var resource = oneDriveFolderTree.walk(pathNames);
 
         if (resource instanceof JadFsResource.NullJadFsResource) {
-            throw new JadNioFsParentPathInvalidException("Path is not present in remote account.");
+            throw new JadNioFsFileNotFoundException("Path is not present in remote account.");
         }
 
         return apiCaller.getJadAttributesForPath(resource, options);
@@ -301,5 +303,17 @@ public class OneDriveFileSysRemoteAPI implements FileSystemRemoteAPI<OneDrivePat
         }
 
         apiCaller.delete(resourceInOneDrive);
+    }
+
+    private void checkSourceTarget(JadFsResource sourceResource, JadFsResource targetResource) {
+
+        if (sourceResource instanceof JadFsResource.NullJadFsResource) {
+            throw new JadNioFsFileNotFoundException("Source path is not present in remote account.");
+        }
+
+        if (targetResource instanceof JadFsResource.NullJadFsResource) {
+            throw new JadNioFsFileNotFoundException("Target path is not present in remote account.");
+        }
+
     }
 }
