@@ -92,7 +92,7 @@ public class PollingWatchKey extends BaseWatchKey {
         try {
             // update the events
             this.events = events;
-
+            logger.info("Scheduling poll to happen in {} seconds. ", period);
             // create the periodic task
             this.poller = watcher().scheduledExecutor()
                     .scheduleAtFixedRate(() -> poll(), period, period, TimeUnit.SECONDS);
