@@ -157,9 +157,34 @@ public class SftpFileSystemProvider extends FileSystemProvider {
 			var fs = sourceSftpPath.getFileSystem();
 			var sourcePath = toAbsolutePathString(source);
 			var targetPath = toAbsolutePathString(target);
+			var sftp = fs.getSftp();			
 			var replaceExisting = optionsList.contains(StandardCopyOption.REPLACE_EXISTING);
-			var sftp = fs.getSftp();
-
+			
+			if(Files.isDirectory(source)) {
+				/* If the file is a directory then an empty directory is
+			     * created in the target location (entries in the directory are not
+			     * copied). This method can be used with the {@link #walkFileTree
+			     * walkFileTree} method to copy a directory and all entries in the directory,
+			     * or an entire <i>file-tree</i> where required.
+			     */
+				if(Files.exists(target)) {
+					boolean hasContents;
+					try(var str = newDirectoryStream(target, null)) {
+						hasContents = str.iterator().hasNext();
+					}
+					if(hasContents && replaceExisting) {
+						/* 
+						 * Replace an existing file. A non-empty directory cannot be
+					     * replaced. 
+						 */
+						throw new DirectoryNotEmptyException(target.toString());
+					}
+				}
+				else {
+					createDirectory(target);
+				}
+			}
+	
 			try {
 				sftp.copyRemoteFile(sourcePath, targetPath, replaceExisting);
 			} catch (SftpStatusException se) {
