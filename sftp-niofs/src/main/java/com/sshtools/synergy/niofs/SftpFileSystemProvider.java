@@ -108,6 +108,17 @@ public class SftpFileSystemProvider extends FileSystemProvider {
 				throw uoe;
 			case SftpStatusException.SSH_FX_FILE_ALREADY_EXISTS:
 				return new FileAlreadyExistsException(e.getMessage());
+			case SftpStatusException.SSH_FX_FAILURE:
+				var idx = e.getMessage().indexOf("already exists named "); 
+				if(idx == -1) {
+					return new IOException(e.getMessage(), e);
+				}
+				else {
+					/* TODO Not sure if this is bug in synergy client. We are not getting SSH_FX_FILE_ALREADY_EXISTS
+					 * when the directory already exists.
+					 */
+					return new FileAlreadyExistsException(e.getMessage().substring(idx + 21));
+				}
 			}
 			return new IOException(e.getMessage(), e);
 		}
